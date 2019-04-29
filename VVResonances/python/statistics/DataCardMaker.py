@@ -1437,7 +1437,7 @@ class DataCardMaker:
 
 
 
-    def addParametricYieldHVTBR(self,name,ID,jsonFile,jsonFileCS,BRStr,constant,uncertaintyName,uncertaintyFormula,uncertaintyValue):
+    def addParametricYieldHVTBR(self,name,ID,jsonFile,jsonFileCS,sigmaStr,BRStr,constant,uncertaintyName,uncertaintyFormula,uncertaintyValue):
         print 'I will only assume the BRs from HVT and float the cross section'
         ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
         from array import array
@@ -1448,10 +1448,15 @@ class DataCardMaker:
         yArr=[]
         yErrArr=[]
 
+        sigmaStr = sigmaStr.split(",")
         for m in sorted(map(float,info.keys())):
             xArr.append(float(m))
             #I know this is stupid 
-            yArr.append(float(info[str(int(m))][BRStr]))
+	    value = 0
+	    for i,s in enumerate(sigmaStr):
+	     value+=float(info[str(int(m))][sigmaStr[i]])*float(info[str(int(m))][BRStr])
+            yArr.append(value)
+	    print m,value
 
         pdfSigma="_".join([name,self.tag,"sigma"])
         spline=ROOT.RooSpline1D(pdfSigma,pdfSigma,self.w.var("MH"),len(xArr),array('d',xArr),array('d',yArr))    
