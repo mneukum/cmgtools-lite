@@ -129,7 +129,9 @@ dataPlotters=[]
 dataPlottersNW=[]
 for filename in os.listdir(args[0]):
     for sampleType in sampleTypes:
+        print filename, sampleType
         if filename.find(sampleType)!=-1:
+            print "found!"
             fnameParts=filename.split('.')
             fname=fnameParts[0]
             ext=fnameParts[1]
@@ -167,13 +169,17 @@ for filename in os.listdir(args[0]):
       
 data=MergedPlotter(dataPlotters)
 
+print "options.res", options.res
+print "options.resHisto", options.resHisto
+
+
 fcorr=ROOT.TFile(options.res)
 
 scale = fcorr.Get("scale"+options.resHisto+"Histo")
 res   = fcorr.Get("res"  +options.resHisto+"Histo")
 
 binning = getBinning(options.binsMVV,options.minx,options.maxx,options.binsx)
-print binning
+print "binning", binning
 
 
 #distribution of mjet from simulation --> use to validate kernel
@@ -230,7 +236,7 @@ for plotter,plotterNW in zip(dataPlotters,dataPlottersNW):
    histI2.Delete()
    histTMP.Delete()
 
-
+# print "len(sampleTypes):", len(sampleTypes)
  if len(sampleTypes)<2: continue
  elif plotter.filename.find(sampleTypes[1].replace('.root','')) != -1: #alternative shape Herwig
    print "Preparing alternative shapes for sampletype " ,sampleTypes[1]

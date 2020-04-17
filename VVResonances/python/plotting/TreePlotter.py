@@ -238,7 +238,8 @@ class TreePlotter(PlotterBase):
     def makeDataSet(self,var,cut,firstEv=0,lastEv=-1):
         variables=var.split(',')
   
-        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("whoami"),random.randint(0, 1e+6)),"RECREATE")
+        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("id -u"),random.randint(0, 1e+6)),"RECREATE")
+#        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("whoami"),random.randint(0, 1e+6)),"RECREATE")
         # self.cache=ROOT.TFile("cache%i.root"%(random.randint(0, 1e+6)),"RECREATE")
         w=ROOT.RooWorkspace("w","w")
         argset=ROOT.RooArgSet()

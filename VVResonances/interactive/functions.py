@@ -24,12 +24,16 @@ class AllFunctions():
   if 'VBF' in template: cut='*'.join([self.cuts['common_VBF'],self.cuts['acceptanceMJ'],addcuts])
   else: cut='*'.join([self.cuts['common_VV'],self.cuts['acceptanceMJ'],addcuts])
   ##the parameters to be fixed should be optimized
-  rootFile=filename+"_MVV.root"
+  rootFile=filename+"_MVV.root" # this is the file that is missing
   fixPars = fixParsMVV["fixPars"]  
   cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"'.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts)
+  print "the vvMakeSignalMVVShapes.py command for debugging:"
+  print cmd
   os.system(cmd)
   jsonFile=filename+"_MVV.json"
   cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixParsMVV["pol"])
+  print "the vvMakeJSON.py command for debugging:"
+  print cmd
   os.system(cmd)
 
  def makeSignalShapesMJ(self,filename,template,leg,fixPars,addcuts="1"):
@@ -73,6 +77,9 @@ class AllFunctions():
     merge2DDetectorParam(resFile,bins,jobName,template)
    else:
     cmd='vvMake2DDetectorParam.py  -o "{rootFile}" -s "{template}" -c "{cut}"  -v "jj_LV_mass,jj_l1_softDrop_mass"  -g "jj_gen_partialMass,jj_l1_gen_softDrop_mass,jj_l1_gen_pt"  -b {bins}   {samples}'.format(rootFile=resFile,template=template,cut=cut,minMVV=self.minMVV,maxMVV=self.maxMVV,tag=name,bins=bins,samples=self.samples)
+    print "USE THIS COMMAND IN THE SHELL FOR DEBUGGING!"
+    print cmd
+    print "now start executing vvMake2DDetectorParam.py"
     os.system(cmd)
    
    print "Done with ",resFile
@@ -80,6 +87,8 @@ class AllFunctions():
  def makeBackgroundShapesMVVKernel(self,name,filename,template,addCut="1",jobName="1DMVV",wait=True,corrFactorW=1,corrFactorZ=1):
 
   pwd = os.getcwd()
+
+  print "## makeBackgroundShapesMVVKernel"
   
   for c in self.categories:
   
@@ -87,15 +96,16 @@ class AllFunctions():
    print "Working on purity: ", c
    
    resFile=filename+"_nonRes_detectorResponse.root"
-   print "Reading " ,resFile
+   print "  Reading\t " ,resFile
 
    rootFile = filename+"_"+name+"_MVV_"+c+".root"
-   print "Saving to ",rootFile
+   print "  Saving to\t ",rootFile
    
    if 'VBF' in c: cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],addCut,self.cuts['acceptanceGEN'],self.cuts['looseacceptanceMJ']])
    else: cut='*'.join([self.cuts['common_VV'],self.cuts[c],addCut,self.cuts['acceptanceGEN'],self.cuts['looseacceptanceMJ']])
    smp = pwd +"/"+self.samples
 
+   print "  self.submitToBatch:", self.submitToBatch
    if self.submitToBatch:
     if name.find("Jets") == -1: template += ",QCD_Pt-,QCD_HT"
     from modules.submitJobs import Make1DMVVTemplateWithKernels,merge1DMVVTemplate
@@ -104,6 +114,7 @@ class AllFunctions():
    else:
     cmd='vvMake1DMVVTemplateWithKernels.py -H "x" -o "{rootFile}" -s "{template}" -c "{cut}"  -v "jj_gen_partialMass" -b {binsMVV}  -x {minMVV} -X {maxMVV} -r {res} {directory} --corrFactorW {corrFactorW} --corrFactorZ {corrFactorZ} '.format(rootFile=rootFile,template=template,cut=cut,res=resFile,binsMVV=self.binsMVV,minMVV=self.minMVV,maxMVV=self.maxMVV,corrFactorW=corrFactorW,corrFactorZ=corrFactorZ,directory=smp)
     cmd = cmd+self.HCALbinsMVV
+#    print cmd
     os.system(cmd)    
 
  
@@ -111,6 +122,8 @@ class AllFunctions():
 
   pwd = os.getcwd()  
   
+  print "## makeBackgroundShapesMVVConditional"
+
   for c in self.categories:
 
    print " Working on purity: ", c
@@ -119,13 +132,14 @@ class AllFunctions():
 
    resFile=filename+"_"+name+"_detectorResponse.root"
    rootFile=filename+"_"+name+"_COND2D_"+c+"_"+leg+".root"       
-   print "Reading " ,resFile
-   print "Saving to ",rootFile
+   print "  Reading\t " ,resFile
+   print "  Saving to\t ",rootFile
    
    if 'VBF' in c: cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],addCut])#,cuts['acceptanceGEN'],cuts['looseacceptanceMJ']])
    else: cut='*'.join([self.cuts['common_VV'],self.cuts[c],addCut])#,cuts['acceptanceGEN'],cuts['looseacceptanceMJ']])
    smp = pwd +"/"+self.samples 
  
+   print "  self.submitToBatch:", self.submitToBatch
    if self.submitToBatch:
     if name.find("VJets")== -1: template += ",QCD_Pt-,QCD_HT"
     from modules.submitJobs import Make2DTemplateWithKernels,merge2DTemplate
@@ -138,6 +152,8 @@ class AllFunctions():
 
 
  def mergeBackgroundShapes(self,name,filename):
+
+  print "## mergeBackgroundShapes"
 
   for c in self.categories:
 
@@ -254,6 +270,8 @@ class AllFunctions():
   print "Cuts:"
   print "--------------------------------------------------------------------------"
   print self.cuts
+#  for i in self.cuts:
+#    print i, ":\n", self.cuts[i]
   print "--------------------------------------------------------------------------"
   print "mjj ranges: min ",self.minMVV,"max",self.maxMVV, "nbins",self.binsMVV
   print "--------------------------------------------------------------------------"

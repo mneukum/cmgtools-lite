@@ -6,7 +6,8 @@ import sys,commands
 
 class Fitter(object):
     def __init__(self,poi = ['x']):
-        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("whoami"),random.randint(0, 1e+6)),"RECREATE")
+#        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("whoami"),random.randint(0, 1e+6)),"RECREATE")
+        self.cache=ROOT.TFile("/tmp/%s/cache%i.root"%(commands.getoutput("id -u"),random.randint(0, 1e+6)),"RECREATE")
         self.cache.cd()
 
         self.w=ROOT.RooWorkspace("w","w")

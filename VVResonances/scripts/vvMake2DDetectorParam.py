@@ -11,6 +11,8 @@ from CMGTools.VVResonances.plotting.TreePlotter import TreePlotter
 from CMGTools.VVResonances.plotting.MergedPlotter import MergedPlotter
 ROOT.gROOT.SetBatch(True)
 
+print "start vvMake2DDetectorParam.py ..."
+
 parser = optparse.OptionParser()
 parser.add_option("-o","--output",dest="output",help="Output",default='')
 parser.add_option("-s","--samples",dest="samples",default='',help="Type of sample")
@@ -21,6 +23,7 @@ parser.add_option("-g","--genVars",dest="genVars",help="variable for gen",defaul
 
 (options,args) = parser.parse_args()
 
+
 print 
 sampleTypes=options.samples.split(',')
 dataPlotters=[]
@@ -28,6 +31,7 @@ dataPlotters=[]
 for filename in os.listdir(args[0]):
     for sampleType in sampleTypes:
         if filename.find(sampleType)!=-1:
+	    print "[vvMake2DDetectorParam] found sample: ", filename
             fnameParts=filename.split('.')
 	    if len(fnameParts)<2: continue
             fname=fnameParts[0]
@@ -62,13 +66,26 @@ genVariables=options.genVars.split(',')
 
 gaussian=ROOT.TF1("gaussian","gaus",0.5,1.5)
 
-
+print "open Root file", options.output
 f=ROOT.TFile(options.output,"RECREATE")
 f.cd()
 
+#print variables[0]
+#print variables[1]
+#print genVariables[0]
+#print genVariables[1]
+#print genVariables[2]
+#print options.cut
+#print binsx
+#print binsz_x
+#print binsz_y
+#print "superHX=data.drawTH2Binned("+variables[0]+'/'+genVariables[0]+':'+genVariables[2]+","+options.cut+","+"1"+",binsx,binsz_x)" #mvv
+#print "superHY=data.drawTH2Binned("+variables[1]+'/'+genVariables[1]+':'+genVariables[2]+","+options.cut+","+"1"+",binsx,binsz_y)" #mvv
+print "the \"data.drawTH2Binned - step\". Takes some time"
 superHX=data.drawTH2Binned(variables[0]+'/'+genVariables[0]+':'+genVariables[2],options.cut,"1",binsx,binsz_x) #mvv
 superHY=data.drawTH2Binned(variables[1]+'/'+genVariables[1]+':'+genVariables[2],options.cut,"1",binsx,binsz_y) #mjet
 
+print "the \"mvvres fit - step YProjection\". Again, takes some time"
 for bin in range(1,superHX.GetNbinsX()+1):
    tmp=superHX.ProjectionY("q",bin,bin)
    if bin==1: 
@@ -106,6 +123,7 @@ for bin in range(1,superHX.GetNbinsX()+1):
    scalexHisto.SetBinError  (bin,tmpmeanErr)
    resxHisto.SetBinContent  (bin,tmpwidth)
    resxHisto.SetBinError    (bin,tmpwidthErr)
+print "the \"mjres fit - step YProjection\". Again, takes some time"
 for bin in range(1,superHY.GetNbinsX()+1): 
    tmp=superHY.ProjectionY("q",bin,bin)
    if bin==1:
@@ -143,7 +161,8 @@ for bin in range(1,superHY.GetNbinsX()+1):
    resyHisto.SetBinContent  (bin,tmpwidth)
    resyHisto.SetBinError    (bin,tmpwidthErr)
 
-         
+#print "ok up to here"
+print "writing histos"         
 scalexHisto.Write()
 scaleyHisto.Write()
 resxHisto.Write()
@@ -151,3 +170,5 @@ resyHisto.Write()
 superHX.Write("dataX")
 superHY.Write("dataY")
 f.Close()    
+
+print "done with vvMake2DDetectorParam.py"

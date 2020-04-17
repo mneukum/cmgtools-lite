@@ -165,6 +165,7 @@ N=0
 allgraphs = {}
 allgraphs_sigma = {}
 if (options.sample.find("H")!=-1 or options.sample.find("h")!=-1 or options.sample.find("WZ")!=-1):
+    print "sample contains: H, h or WZ"
     for mass in samples.keys():
         if samples[mass].find("WZ")!=-1:
             print 'histos for WZ signal'
