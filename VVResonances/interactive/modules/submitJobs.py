@@ -101,7 +101,7 @@ def submitJobs(minEv,maxEv,cmd,OutputFileNames,queue,jobname,path):
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
           if runinKA==True: 
-            fout.write("USERID = id -u\n")
+            fout.write("USERID=`id -u`\n")
             fout.write("mkdir -p /tmp/${USERID}/\n")
           fout.write(cmd+" -o res"+jobname+"/"+OutputFileNames+"_"+str(j+1)+"_"+k+" -s "+k+" -e "+str(minEv[k][j])+" -E "+str(maxEv[k][j])+"\n")
           fout.write("echo 'STOP---------------'\n")
@@ -208,7 +208,7 @@ def Make2DDetectorParam(rootFile,template,cut,samples,jobname="DetPar",bins="200
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
           if runinKA==True: 
-            fout.write("USERID = id -u\n")
+            fout.write("USERID=`id -u`\n")
             fout.write("mkdir -p /tmp/${USERID}/\n")
           fout.write(cmd+" -o "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" -s "+files[x-1]+"\n")
           fout.write("echo 'STOP---------------'\n")
@@ -1415,7 +1415,7 @@ def makeData(template,cut,rootFile,binsMVV,binsMJ,minMVV,maxMVV,minMJ,maxMJ,fact
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
           if runinKA==True: 
-            fout.write("USERID = id -u\n")
+            fout.write("USERID=`id -u`\n")
             fout.write("mkdir -p /tmp/${USERID}/\n")
           fout.write(cmd+" -o "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" -s "+files[x-1]+"\n")
           fout.write("echo 'STOP---------------'\n")
@@ -1612,7 +1612,7 @@ def submitCPs(samples,template,wait,jobname="CPs",rootFile="controlplots_2017.ro
         fout.write("cd "+str(path)+"\n")
         fout.write("cmsenv\n")
         if runinKA==True: 
-          fout.write("USERID = id -u\n")
+          fout.write("USERID=`id -u`\n")
           fout.write("mkdir -p /tmp/${USERID}/\n")
         fout.write(cmd+" "+files[x-1]+" "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" "+samples+"\n")
         print "EXECUTING: ",cmd+" "+files[x-1]+" "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" "+samples+"\n"
