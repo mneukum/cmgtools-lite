@@ -127,14 +127,15 @@ parser.add_option("-t","--triggerweight",dest="triggerW",action="store_true",hel
 
 (options,args) = parser.parse_args()
 #define output dictionary
-print options.addcut
+
 
 samples={}
 graphs={'MEAN':ROOT.TGraphErrors(),'SIGMA':ROOT.TGraphErrors(),'ALPHA1':ROOT.TGraphErrors(),'N1':ROOT.TGraphErrors(),'ALPHA2':ROOT.TGraphErrors(),'N2':ROOT.TGraphErrors()}
 
 testcorr= False
 
-if options.sample.find("ZH")!=-1 or options.sample.find('Zh')!=-1 or options.sample.find("WZ")!=-1 or options.sample.find('WH')!=-1:
+
+if options.sample.find("ZH")!=-1 or options.sample.find('Zh')!=-1 or options.sample.find("WZ")!=-1 or options.sample.find('WH')!=-1 or options.sample.find('Wh')!=-1:
     testcorr = True
 print " ######### testcorr ",testcorr
 for filename in os.listdir(args[0]):

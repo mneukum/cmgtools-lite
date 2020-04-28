@@ -4,16 +4,44 @@ import ROOT
 import json
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
 from CMGTools.VVResonances.statistics.DataCardMaker import DataCardMaker
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-p","--period",dest="period",default="2016,2017",help="run period")
+parser.add_option("--pseudodata",dest="pseudodata",help="make cards with real data or differen pseudodata sets: Vjets, ZprimeZH etc",default='')
+parser.add_option("--signal",dest="signal",default="BulkGWW,BulkGZZ,ZprimeWW,ZprimeZH,WprimeWH,WprimeWZ",help="which signal do you want to run? options are BulkGWW, BulkGZZ, WprimeWZ, ZprimeWW, ZprimeZH")
+parser.add_option("--outlabel",dest="outlabel",help="lebel for output workspaces for example sigonly_M4500",default='')
+parser.add_option("-c","--category",dest="category",default="VV_HPLP,VV_HPHP,VH_HPLP,VH_HPHP,VH_LPHP",help="run period")
+
+
+(options,args) = parser.parse_args()
+
+
+
+
+
+
+
 cmd='combineCards.py '
 
-sf_qcd = 1.0
 
-pseudodata = "ZprimeZH" #"Vjets"
-outlabel = "sigonly_M4500" # ZprimeZH
 
-datasets=['2016']#,'2017']
+pseudodata = options.pseudodata
+
+outlabel = options.outlabel
+
+datasets= options.period.split(",")
+
+
+purities= options.category.split(",")
+
+signals = options.signal.split(",")
 
 doVjets= True
+sf_qcd=1.
+if outlabel.find("sigonly")!=-1 or outlabel.find("qcdonly")!=-1: doVjets = False
+if outlabel.find("sigonly")!=-1 or outlabel.find("Vjetsonly")!=-1: sf_qcd = 0.00001
+
 resultsDir = {'2016':'results_2016','2017':'results_2017'}
 
 lumi = {'2016':35900,'2017':41367}
@@ -21,6 +49,7 @@ lumi_unc = {'2016':1.025,'2017':1.023}
 
 scales = {"2017" :[0.983,1.08], "2016":[1.014,1.086]}
 scalesHiggs = {"2017" :[0.983,1.08], "2016":[1.014,1.086]}
+
 
 
 #quick fix to add VH !!!
@@ -35,10 +64,6 @@ vtag_unc['VH_HPLP'] = {'2016':'1.','2017':'1.'}
 
 vtag_pt_dependence = {'VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))','VH_HPHP':'1','VH_HPLP':'1'}
 
-purities= ['VV_HPLP']#,'VV_HPHP','VH_HPLP','VH_HPHP','VH_LPHP']
-
-#signals = ["BulkGWW", "BulkGZZ","ZprimeWW","WprimeWZ","VprimeWV","'ZprimeZH'"]
-signals = ["ZprimeZH"]
 
 doCorrelation = True 
 Tools = DatacardTools(scales,scalesHiggs,vtag_pt_dependence,lumi_unc,vtag_unc,sf_qcd,pseudodata,outlabel,doCorrelation)
@@ -74,7 +99,7 @@ for sig in signals:
         ncontrib+=1
 
       #rootFile3DPDF = resultsDir[dataset]+'/JJ_2016_nonRes_3D_VV_HPLP.root'
-      rootFile3DPDF = resultsDir[dataset]+"/save_new_shapes_%s_pythia_"%dataset+p+"_3D.root"
+      rootFile3DPDF = resultsDir[dataset]+"/save_new_shapes_%s_pythia_"%dataset+"VVVH_all"+"_3D.root"
       print "rootFile3DPDF ",rootFile3DPDF
       rootFileNorm = resultsDir[dataset]+"/JJ_%s_nonRes_"%dataset+p+".root"   
       print "rootFileNorm ",rootFileNorm
@@ -96,8 +121,8 @@ for sig in signals:
         histName="data"
         scaleData=1.0
       if pseudodata==sig:
-       rootFileData = resultsDir[dataset]+"/JJ_"+sig+"_VH_all_M"+outlabel.split("_M")[1]+".root"
-       histName="data_obs"
+       rootFileData = resultsDir[dataset]+"/pseudodata_sigOnly_"+dataset+"_"+sig+"_"+p+"_"+"M"+outlabel.split("_M")[1]+".root"
+       histName="data_obs" 
        scaleData=1.0
       Tools.AddData(card,rootFileData,histName,scaleData)
       
