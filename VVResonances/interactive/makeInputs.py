@@ -1,6 +1,8 @@
 from functions import *
 from optparse import OptionParser
-from cuts import cuts, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSignal, minMJ,maxMJ,binsMJ, minMVV, maxMVV, binsMVV, minMX, maxMX, catVtag, catHtag
+#from cuts import cuts, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSignal, minMJ,maxMJ,binsMJ, minMVV, maxMVV, binsMVV, minMX, maxMX, catVtag, catHtag
+import cuts
+
 ## import cuts of the analysis from separate file
 
 # python makeInputs.py -p 2016 --run "detector"
@@ -27,6 +29,10 @@ parser.add_option("--signal",dest="signal",default="BGWW",help="which signal do 
 
 print options
 
+
+ctx  = cuts.cuts("init_VV_VH.json",int(options.period),options.sorting+"dijetbins")
+if options.binning==False: ctx  = cuts.cuts("init_VV_VH.json",int(options.period),options.sorting)
+
 period = options.period
 # NB to use the DDT decorrelation method, the ntuples in /eos/cms/store/cmst3/group/exovv/VVtuple/FullRun2VVVHNtuple/deepAK8V2/ should be used
 samples= str(period)+"/" #for V+jets we use 2017 samples also for 2016 because the 2016 ones are buggy
@@ -39,73 +45,12 @@ runParallel   = True #Set to true if you want to run all kernels in parallel! Th
 dijetBinning = options.binning
 useTriggerWeights = options.trigg
 
-#scale factors to be updated!
-HPSF = HPSF16
-LPSF = LPSF16
-if period == 2017:
-    HPSF = HPSF17
-    LPSF = LPSF17
+
     
 addOption = ""
 if useTriggerWeights: 
     addOption = "-t"
     
-if dijetBinning:
-    HCALbinsMVV  =" --binsMVV "
-    HCALbinsMVV += ','.join(str(e) for e in dijetbins)
-else:
-    HCALbinsMVV=""
-    HCALbinsMVVSignal=""
-
-if period == 2018:
-    lumi = 59690. #to be checked! https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2018Analysis
-if period == 2017:
-    lumi = 41367.    
-elif period == 2016:
-    lumi = 35900.
-
-
-#signal regions
-if sorting == 'random':
- print "Use random sorting!"
- print "ortoghonal VV + VH"
- catsAll = {}
- #scheme 2: improves VV HPHP (VH_HPHP -> VV_HPHP -> VH_LPHP,VH_HPLP -> VV_HPLP) 
- #at least one H tag HP (+ one V/H tag HP)                                                                                                                                                                                                                                     
- catsAll['VH_HPHP'] = '('+'&&'.join([catVtag['HP1'],catHtag['HP2']])+')'
- catsAll['HV_HPHP'] = '('+'&&'.join([catHtag['HP1'],catVtag['HP2']])+')'
- catsAll['HH_HPHP'] = '('+'&&'.join([catHtag['HP1'],catHtag['HP2']])+')'
- cuts['VH_HPHP'] = '('+'||'.join([catsAll['VH_HPHP'],catsAll['HV_HPHP'],catsAll['HH_HPHP']])+')'
- 
- # two V tag HP                                                                                                                                                                                                                                                                
- cuts['VV_HPHP'] = '('+'!'+cuts['VH_HPHP']+'&&'+'(' +  '&&'.join([catVtag['HP1'],catVtag['HP2']]) + ')' + ')'
-
- #at least one H-tag HP (+one V OR H-tag LP)                                                                                                                                                                                                                                   
- catsAll['VH_LPHP'] = '('+'&&'.join([catVtag['LP1'],catHtag['HP2']])+')'
- catsAll['HV_HPLP'] = '('+'&&'.join([catHtag['HP1'],catVtag['LP2']])+')'
- catsAll['HH_HPLP'] = '('+'&&'.join([catHtag['HP1'],catHtag['LP2']])+')'
- catsAll['HH_LPHP'] = '('+'&&'.join([catHtag['LP1'],catHtag['HP2']])+')'
- cuts['VH_LPHP'] = '('+'('+'!'+cuts['VH_HPHP']+'&&!'+cuts['VV_HPHP']+')&&('+'||'.join([catsAll['VH_LPHP'],catsAll['HV_HPLP'],catsAll['HH_HPLP'],catsAll['HH_LPHP']])+')'+')'
-
- #at least one V-tag HP (+ one H-tag LP)                                  
- catsAll['VH_HPLP'] = '('+'&&'.join([catVtag['HP1'],catHtag['LP2']])+')'
- catsAll['HV_LPHP'] = '('+'&&'.join([catHtag['LP1'],catVtag['HP2']])+')'
- cuts['VH_HPLP'] = '('+'('+'!'+cuts['VH_LPHP']+'&&!'+cuts['VH_HPHP']+'&&!'+cuts['VV_HPHP']+')&&('+'||'.join([catsAll['VH_HPLP'],catsAll['HV_LPHP']])+')'+')'
-
- cuts['VH_all'] =  '('+  '||'.join([cuts['VH_HPHP'],cuts['VH_LPHP'],cuts['VH_HPLP']]) + ')'
-
- cuts['VV_HPLP'] = '(' +'('+'!'+cuts['VH_all']+') &&' + '(' + '('+  '&&'.join([catVtag['HP1'],catVtag['LP2']]) + ')' + '||' + '(' + '&&'.join([catVtag['HP2'],catVtag['LP1']]) + ')' + ')' + ')'
-
-else:
- print "Use b-tagging sorting"
- cuts['VH_HPHP'] = '('+  '&&'.join([catHtag['HP1'],catVtag['HP2']]) + ')'
- cuts['VH_HPLP'] = '('+  '&&'.join([catHtag['HP1'],catVtag['LP2']]) + ')'
- cuts['VH_LPHP'] = '('+  '&&'.join([catHtag['LP1'],catVtag['HP2']]) + ')'
- cuts['VH_LPLP'] = '('+  '&&'.join([catHtag['LP1'],catVtag['LP2']]) + ')'
- cuts['VH_all'] =  '('+  '||'.join([cuts['VH_HPHP'],cuts['VH_HPLP'],cuts['VH_LPHP'],cuts['VH_LPLP']]) + ')'
- cuts['VV_HPHP'] = '(' + '!' + cuts['VH_all'] + '&&' + '(' + '&&'.join([catVtag['HP1'],catVtag['HP2']]) + ')' + ')'
- cuts['VV_HPLP'] = '(' + '!' + cuts['VH_all'] + '&&' + '(' + '('+  '&&'.join([catVtag['HP1'],catVtag['LP2']]) + ')' + '||' + '(' + '&&'.join([catVtag['HP2'],catVtag['LP1']]) + ')' + ')' + ')'
-
 
 
 #all categories
@@ -149,7 +94,7 @@ resTemplate= "ZJetsToQQ_HT400to600,ZJetsToQQ_HT600to800,ZJetsToQQ_HT800toInf,WJe
       
 
 #do not change the order here, add at the end instead
-parameters = [cuts,minMVV,maxMVV,minMX,maxMX,binsMVV,HCALbinsMVV,samples,categories,minMJ,maxMJ,binsMJ,lumi,submitToBatch]   
+parameters = [ctx.cuts,ctx.minMVV,ctx.maxMVV,ctx.minMX,ctx.maxMX,ctx.binsMVV,ctx.HCALbinsMVV,samples,categories,ctx.minMJ,ctx.maxMJ,ctx.binsMJ,ctx.lumi,submitToBatch]   
 f = AllFunctions(parameters)
 
 
@@ -188,47 +133,11 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
         sys.exit()
 
 
-fixParsSig={"ZprimeZH":{
-    "VV_HPLP": {"fixPars":"mean:91.5,n:1.83,n2:4.22,sigmaH:10.7,nH:130", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol4,sigmaH:pol0,alphaH:pol2,nH:pol3,alpha2H:pol3,n2H:pol4"}, 
-    "VH_all": {"fixPars":"mean:91.5,n2:4.22,n:128,alphaH:0.51,nH:127","pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol5,sigmaH:pol7,alphaH:pol0,nH:pol3,alpha2H:pol3,n2H:pol4"}, 
-    "VH_HPLP": {"fixPars":"mean:90.5,sigmaH:10,n:5,nH:5", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol3,nH:pol3,alpha2H:pol5,n2H:pol4"},
-    "VH_LPHP": {"fixPars":"mean:90.5,sigmaH:10,n:5,nH:5", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol3,nH:pol3,alpha2H:pol5,n2H:pol4"},#irene
-    "VV_HPHP": {"fixPars":"mean:90.9,alpha:1.1,n:1.83,n2:4.22,alphaH:0.5,nH:120", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol4,sigmaH:pol2,alphaH:pol0,nH:pol3,alpha2H:pol4,n2H:pol4"}, 
-    "VH_HPHP": {"fixPars":"n:4.2,nH:132", "pol":"mean:pol3,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol3,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol2,nH:pol0,alpha2H:pol3,n2H:pol4"},"NP":{"fixPars":"nH:129,n:2.4","pol":"mean:pol5,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol3,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol2,nH:pol0,alpha2H:pol3,n2H:pol4"}},
-"BulkGWW":{ "VV_HPLP": {"fixPars":"alpha:1.125,n:2,n2:2","pol":"mean:pol4,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol3"},
-            "VV_HPHP": {"fixPars":"alpha:1.08,n:6,n2:2", "pol":"mean:pol5,sigma:pol5,alpha:pol0,n:pol0,alpha2:pol5,n2:pol0"},
-            "VH_HPLP": {"fixPars":"alpha:1.125,n:2,n2:2","pol":"mean:pol4,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol3"},
-            "VH_HPHP": {"fixPars":"n:60,alpha:0.76", "pol":"mean:pol5,sigma:pol6,alpha:pol0,n:pol0,alpha2:pol5,n2:pol5"},
-            "VH_LPHP": {"fixPars":"alpha:1.125,n:2,n2:2","pol":"mean:pol4,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol3"},"NP":{"fixPars":"n:5","pol":"mean:pol4,sigma:pol4,alpha:pol5,n:pol0,alpha2:pol3,n2:pol3"}}, #VH_LPHP irene
-"BulkGZZ":{"VV_HPLP":{"fixPars":"alpha:1.024,n:3.25","pol":"mean:pol4,sigma:pol3,alpha:pol0,n:pol0,alpha2:pol3,n2:pol4"},
-           "VV_HPHP":{"fixPars":"n2:4.8,n:2.8","pol":"mean:pol5,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol3,n2:pol0"},
-           "VH_HPLP":{"fixPars":"alpha:1.024,n:3.25","pol":"mean:pol4,sigma:pol3,alpha:pol0,n:pol0,alpha2:pol3,n2:pol4"},
-           "VH_HPHP":{"fixPars":"n:64","pol":"mean:pol3,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol3,n2:pol3"},"NP":{"fixPars":"n:3.6,alpha:1","pol":"mean:pol5,sigma:pol6,alpha:pol7,n:pol0,alpha2:pol5,n2:pol4"}},
-"ZprimeWW":{"VV_HPLP": {"fixPars":"alpha:1.125","pol":"mean:pol5,sigma:pol5,alpha:pol0,n:pol3,alpha2:pol3,n2:pol3"},
-            "VV_HPHP": {"fixPars":"alpha:1.083,n:3.5,n2:2.3","pol":"mean:pol5,sigma:pol4,alpha:pol0,n:pol0,alpha2:pol5,n2:pol0"},
-            "VH_HPLP": {"fixPars":"n:5","pol":"mean:pol5,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol3"},
-            "VH_HPHP": {"fixPars":"n:1.2,alpha:1.22", "pol":"mean:pol6,sigma:pol4,alpha:pol0,n:pol0,alpha2:pol5,n2:pol3"},"NP":{"fixPars":"n:14","pol":"mean:pol4,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol3"}},
-"WprimeWZ":{"VV_HPLP":{"fixPars":"n:2.3","pol":"mean:pol3,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol1"},
-            "VV_HPHP":{"fixPars":"n:2,n2:2,alpha:1.505", "pol":"mean:pol3,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol1"},
-            "VH_HPLP":{"fixPars":"n:2.3","pol":"mean:pol3,sigma:pol3,alpha:pol3,n:pol0,alpha2:pol3,n2:pol1"},
-            "VH_HPHP":{"fixPars":"n:0.24,alpha:1.6", "pol":"mean:pol3,sigma:pol5,alpha:pol3,n:pol0,alpha2:pol3,n2:pol3"},"NP":{"fixPars":"n:2.6,alpha:1.4","pol":"mean:pol5,sigma:pol5,alpha:pol0,n:pol0,alpha2:pol4,n2:pol7"}}, 
-"WprimeWH":{
-    "VV_HPLP": {"fixPars":"mean:91.5,n:1.83,n2:4.22,sigmaH:10.7,nH:130", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol4,sigmaH:pol0,alphaH:pol2,nH:pol3,alpha2H:pol3,n2H:pol4"}, 
-    "VH_all": {"fixPars":"mean:91.5,n2:4.22,n:128,alphaH:0.51,nH:127","pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol5,sigmaH:pol7,alphaH:pol0,nH:pol3,alpha2H:pol3,n2H:pol4"}, 
-    "VH_HPLP": {"fixPars":"mean:90.5,sigmaH:10,n:5,nH:5", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol3,nH:pol3,alpha2H:pol5,n2H:pol4"},
-    "VH_LPHP": {"fixPars":"mean:90.5,sigmaH:10,n:5,nH:5", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol3,nH:pol3,alpha2H:pol5,n2H:pol4"},#irene
-    "VV_HPHP": {"fixPars":"mean:90.9,alpha:1.1,n:1.83,n2:4.22,alphaH:0.5,nH:120", "pol":"mean:pol0,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol5,n2:pol0,meanH:pol4,sigmaH:pol2,alphaH:pol0,nH:pol3,alpha2H:pol4,n2H:pol4"}, 
-    "VH_HPHP": {"fixPars":"n:4.2,nH:132", "pol":"mean:pol3,sigma:pol5,alpha:pol5,n:pol0,alpha2:pol3,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol2,nH:pol0,alpha2H:pol3,n2H:pol4"},"NP":{"fixPars":"nH:129,n:2.4,alphaH:0.6,alpha:1.14","pol":"mean:pol5,sigma:pol5,alpha:pol0,n:pol0,alpha2:pol3,n2:pol3,meanH:pol5,sigmaH:pol6,alphaH:pol0,nH:pol0,alpha2H:pol3,n2H:pol4"}}}
+fixParsSig=ctx.fixParsSig
 
 
 
-fixParsSigMVV={
-                "ZprimeZH":{"fixPars":"ALPHA2:2.42,N1:126.5", "pol":"MEAN:pol1,SIGMA:pol1,N1:pol0,ALPHA1:pol5,N2:pol3,ALPHA2:pol0,corr_mean:pol1,corr_sigma:pol1"},
-               "WprimeWH":{"fixPars":"ALPHA2:2.42,N1:126.5", "pol":"MEAN:pol1,SIGMA:pol1,N1:pol0,ALPHA1:pol5,N2:pol3,ALPHA2:pol0,corr_mean:pol1,corr_sigma:pol1"},
-               "WprimeWZ":{"fixPars":"N1:7,N2:4","pol": "MEAN:pol1,SIGMA:pol3,N1:pol0,ALPHA1:pol7,N2:pol0,ALPHA2:pol5,corr_mean:pol1,corr_sigma:pol1"},
-               "BulkGWW":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:pol1,SIGMA:pol6,ALPHA1:pol5,N1:pol0,ALPHA2:pol4,N2:pol0"},
-               "BulkGZZ":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:pol1,SIGMA:pol6,ALPHA1:pol5,N1:pol0,ALPHA2:pol4,N2:pol0"},
-               "ZprimeWW":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:pol1,SIGMA:pol6,ALPHA1:pol5,N1:pol0,ALPHA2:pol4,N2:pol0"}}
+fixParsSigMVV=ctx.fixParsSigMVV
 
 
 if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
@@ -262,7 +171,7 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
 
     if options.run.find("all")!=-1 or options.run.find("norm")!=-1:
         print "fit signal norm "
-        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':HPSF*HPSF,'VH_HPLP':HPSF*LPSF,'VH_LPHP':HPSF*LPSF,'VH_LPLP':LPSF*LPSF,'VV_HPHP':HPSF*HPSF,'VV_HPLP':HPSF*LPSF,'VH_all':HPSF*HPSF+HPSF*LPSF})
+        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF*ctx.HPSF,'VH_HPLP':ctx.HPSF*ctx.LPSF,'VH_LPHP':ctx.HPSF*ctx.LPSF,'VH_LPLP':ctx.LPSF*ctx.LPSF,'VV_HPHP':ctx.HPSF*ctx.HPSF,'VV_HPLP':ctx.HPSF*ctx.LPSF,'VH_all':ctx.HPSF*ctx.HPSF+ctx.HPSF*ctx.LPSF})
         f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,cuts['nonres'],"sig")
         f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,cuts['nonres'],"sig")
 
