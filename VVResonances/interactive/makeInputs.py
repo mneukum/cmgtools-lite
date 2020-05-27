@@ -56,7 +56,7 @@ if useTriggerWeights:
 #all categories
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP','VBF_VV_HPHP','VBF_VV_HPLP']
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP']
-categories =["VH_LPHP"]
+#categories =["VH_LPHP"]
                                                                                                                                                                                    
 #list of signal samples --> nb, radion and vbf samples to be added
 BulkGravWWTemplate="BulkGravToWW_"
@@ -171,22 +171,22 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
 
     if options.run.find("all")!=-1 or options.run.find("norm")!=-1:
         print "fit signal norm "
-        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF*ctx.HPSF,'VH_HPLP':ctx.HPSF*ctx.LPSF,'VH_LPHP':ctx.HPSF*ctx.LPSF,'VH_LPLP':ctx.LPSF*ctx.LPSF,'VV_HPHP':ctx.HPSF*ctx.HPSF,'VV_HPLP':ctx.HPSF*ctx.LPSF,'VH_all':ctx.HPSF*ctx.HPSF+ctx.HPSF*ctx.LPSF})
-        f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,cuts['nonres'],"sig")
-        f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,cuts['nonres'],"sig")
+        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag},"spline")
+        f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,ctx.cuts['nonres'],"sig")
+        f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,ctx.cuts['nonres'],"sig")
 
 if options.run.find("all")!=-1 or options.run.find("detector")!=-1:
     print "make Detector response"
-    f.makeDetectorResponse("nonRes","JJ_"+str(period),nonResTemplate,cuts['nonres'])
+    f.makeDetectorResponse("nonRes","JJ_"+str(period),nonResTemplate,ctx.cuts['nonres'])
 
 if options.run.find("all")!=-1 or options.run.find("qcd")!=-1:
     print "Make nonresonant QCD templates and normalization"
     if runParallel and submitToBatch:
         if options.run.find("all")!=-1 or options.run.find("templates")!=-1:
             wait = False
-            f.makeBackgroundShapesMVVKernel("nonRes","JJ_"+str(period),nonResTemplate,cuts['nonres'],"1D",wait)
-            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l1',cuts['nonres'],"2Dl1",wait)
-            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l2',cuts['nonres'],"2Dl2",wait)
+            f.makeBackgroundShapesMVVKernel("nonRes","JJ_"+str(period),nonResTemplate,ctx.cuts['nonres'],"1D",wait)
+            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l1',ctx.cuts['nonres'],"2Dl1",wait)
+            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l2',ctx.cuts['nonres'],"2Dl2",wait)
             print "Exiting system! When all jobs are finished, please run mergeKernelJobs below"
             sys.exit()
         elif options.run.find("all")!=-1 or options.run.find("kernel")!=-1:
@@ -195,12 +195,12 @@ if options.run.find("all")!=-1 or options.run.find("qcd")!=-1:
     else:
         if options.run.find("all")!=-1 or options.run.find("templates")!=-1:
             wait = True
-            f.makeBackgroundShapesMVVKernel("nonRes","JJ_"+str(period),nonResTemplate,cuts['nonres'],"1D",wait)
-            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l1',cuts['nonres'],"2Dl1",wait)
-            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l2',cuts['nonres'],"2Dl2",wait)
+            f.makeBackgroundShapesMVVKernel("nonRes","JJ_"+str(period),nonResTemplate,ctx.cuts['nonres'],"1D",wait)
+            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l1',ctx.cuts['nonres'],"2Dl1",wait)
+            f.makeBackgroundShapesMVVConditional("nonRes","JJ_"+str(period),nonResTemplate,'l2',ctx.cuts['nonres'],"2Dl2",wait)
             f.mergeBackgroundShapes("nonRes","JJ_"+str(period))
     if options.run.find("all")!=-1 or options.run.find("norm")!=-1:
-        f.makeNormalizations("nonRes","JJ_"+str(period),nonResTemplate,0,cuts['nonres'],"nRes")
+        f.makeNormalizations("nonRes","JJ_"+str(period),nonResTemplate,0,ctx.cuts['nonres'],"nRes")
 
 if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:    
     print "for V+jets"
@@ -209,14 +209,14 @@ if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:
     print "and then we make kernels"
     print " did you run Detector response  for this period? otherwise the kernels steps will not work!"
     print "first kernel W"
-    f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,cuts['nonres'],"1D",0,1.,1.)
+    f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
     print "then kernel Z"
-    f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,cuts['nonres'],"1D",0,1.,1.)
+    f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
     print "then norm W"
-    f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,cuts['nonres'],"nRes","",HPSF,LPSF)
+    f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,ctx.cuts['nonres'],"nRes","",HPSF_vtag,LPSF_vtag)
     print "then norm Z"
-    f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,cuts['nonres'],"nRes","",HPSF,LPSF)
-    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,cuts['nonres'],"nRes","") # ... so we do not need this
+    f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,ctx.cuts['nonres'],"nRes","",HPSF_vtag,LPSF_vtag)
+    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,ctx.cuts['nonres'],"nRes","") # ... so we do not need this
 
 
 if options.run.find("all")!=-1 or options.run.find("data")!=-1:

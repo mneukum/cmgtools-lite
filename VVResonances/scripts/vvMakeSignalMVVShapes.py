@@ -221,14 +221,15 @@ for mass in sorted(samples.keys()):
     if options.triggerW:
         plotter.addCorrectionFactor('jj_triggerWeight','tree')	
         print "Using triggerweight"
-       
+   
     fitter=Fitter(['MVV'])
     fitter.signalResonance('model',"MVV",mass,False)
    
     fitter.w.var("MH").setVal(mass)
 
     extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(0.8*mass,1.1*mass)
-    binning= truncate(getBinning(options.binsMVV,options.min,options.max,100),0.80*mass,1.2*mass)    
+    binning= truncate(getBinning(options.binsMVV,options.minMX,options.maxMX,500),0.80*mass,1.2*mass)    
+    
     histo = plotter.drawTH1Binned(options.mvv,options.cut+extra_extra_cut,"1",binning)
     fitter.importBinnedData(histo,['MVV'],'data')
     ps = []
@@ -306,5 +307,4 @@ if testcorr==True:
 
 
 F.Close()
-
             

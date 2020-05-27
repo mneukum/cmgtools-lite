@@ -6,13 +6,24 @@ import ast
 
 class cuts():
     lumi = 1.
+    lumi_unc = 1.
     yeartag = "16"
-    HPSF = 1.
-    LPSF = 1.
-    
-    minMJ = 0.
-    maxMJ = 0.
-    binsMJ = 0.
+    HPSF_vtag = 1.                                
+    LPSF_vtag = 1.                                
+    HPSF_htag = 1.                                
+    LPSF_htag = 1.                                
+                                                  
+    W_LPmassscale = 1.                                
+    W_HPmassscale = 1.
+                  
+    H_LPmassscale = 1.
+    H_HPmassscale = 1.
+                                                  
+                                                  
+                                                  
+    minMJ = 0.                                    
+    maxMJ = 0.                                    
+    binsMJ = 0.                                   
     
     minMVV = 0.0
     maxMVV = 0.0
@@ -21,15 +32,41 @@ class cuts():
     minMX = 0.
     maxMX = 0.
     
-    HCALbinsMVV  =" --binsMVV "
-    HCALbinsMVVSignal= " --binsMVV "
+    HCALbinsMVV  = ""#" --binsMVV "
+    HCALbinsMVVSignal= ""# 
     
     fixParsSig = {}
     fixParsSigMVV ={}
     catVtag = {}
     catHtag = {}
     
+    varl1Wtag = ""
+    varl1Htag = ""
+    
+    WPHPl1Wtag = ""
+    WPLPl1Wtag = ""
 
+    WPHPl1Htag = ""
+    WPLPl1Htag = ""
+    
+    varl2Wtag = ""
+    varl2Htag = ""
+    
+    WPHPl2Wtag = ""
+    WPLPl2Wtag = ""
+    
+    WPHPl2Htag = ""
+    WPLPl2Htag = ""
+    
+    
+      
+    
+    W_tag_unc_HP= 1.
+    W_tag_unc_LP= 1.
+    H_tag_unc_HP= 1.
+    H_tag_unc_LP= 1.
+    
+    vtag_pt_dependence ={}
     
     cuts={}
     
@@ -61,13 +98,45 @@ class cuts():
                 self.yeartag = "18"
                 print " attention  lumi to be checked #to be checked! https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2018Analysis"
             else: print "no such data taking year -> running with default values on 2016 data"
-    
+           
+         
+         
+            self.W_tag_unc_HP= data["W_tag_unc_HP"][str(year)]
+            self.W_tag_unc_LP= data["W_tag_unc_LP"][str(year)]
+            self.H_tag_unc_HP= data["H_tag_unc_HP"][str(year)]
+            self.H_tag_unc_LP= data["H_tag_unc_LP"][str(year)]
+            
+            self.varl1Wtag = data["tagging_variables_and_wp"]["varl1Wtag"]
+            self.varl1Htag = data["tagging_variables_and_wp"]["varl1Htag"]
+            self.WPHPl1Wtag = data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])
+            self.WPLPl1Wtag = data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag])
+            self.WPHPl1Htag = data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag])
+            self.WPLPl1Htag = data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag])
+   
+            self.varl2Wtag = data["tagging_variables_and_wp"]["varl2Wtag"]
+            self.varl2Htag = data["tagging_variables_and_wp"]["varl2Htag"]
+            self.WPHPl2Wtag = data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])
+            self.WPLPl2Wtag = data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag])
+            self.WPHPl2Htag = data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag])
+            self.WPLPl2Htag = data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag])
+            
             self.lumi = data["lumi"+self.yeartag]
+            self.lumi_unc = data["unc_lumi"+self.yeartag]
+            
+            self.W_LPmassscale = data["W_HPmassscale"+self.yeartag]
+            self.W_HPmassscale = data["W_LPmassscale"+self.yeartag]
+                          
+            self.H_LPmassscale = data["H_HPmassscale"+self.yeartag]
+            self.H_HPmassscale = data["H_LPmassscale"+self.yeartag]
 
             self.fixParsSigMVV = data["fixParsSigMVV"]
             self.fixParsSig = data["fixParsSig"]
-            self.HPSF = data['HPSF'+self.yeartag]
-            self.LPSF = data['LPSF'+self.yeartag]
+            self.HPSF_vtag = data['HPSF'+self.yeartag]
+            self.LPSF_vtag = data['LPSF'+self.yeartag]
+            self.HPSF_htag = data['htagHPSF'+self.yeartag]
+            self.LPSF_htag = data['htagLPSF'+self.yeartag]
+            self.vtag_pt_dependence = data["vtag_pt_dependence"+self.yeartag]
+            
             self.catVtag['HP1'] = '('+data["tagging_variables_and_wp"]["varl1Wtag"]+'>'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])+')' 
             self.catVtag['HP2'] = '('+data["tagging_variables_and_wp"]["varl2Wtag"]+'>'+ data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])+')' 
             self.catVtag['LP1'] = '(('+ data["tagging_variables_and_wp"]["varl1Wtag"]+'<'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag]) +')&&('+ data["tagging_variables_and_wp"]["varl1Wtag"] +'>'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag]) +'))' 
@@ -99,7 +168,7 @@ class cuts():
                     if b < self.minMVV: continue
                     dijetbins.append(b)
                 
-                
+                self.HCALbinsMVV = " --binsMVV " 
                 self.HCALbinsMVV += ','.join(str(e) for e in dijetbins)
 
                 self.minMVV = float(dijetbins[0])
@@ -112,7 +181,7 @@ class cuts():
                     if b < self.minMX: continue
                     dijetbins.append(b)
                 
-                
+                self.HCALbinsMVVSignal = " --binsMVV "
                 self.HCALbinsMVVSignal += ','.join(str(e) for e in dijetbins)
             else:
                 self.HCALbinsMVV=""
@@ -160,8 +229,8 @@ class cuts():
 
 if __name__ == "__main__":
     c = cuts("init_VV_VH.json",2016,"dijetbins_random")
-    print c.HPSF
-    print c.LPSF
+    print c.HPSF_vtag
+    print c.LPSF_vtag
     print c.minMJ
     print c.catVtag['LP1']
     
@@ -179,3 +248,5 @@ if __name__ == "__main__":
     
     
     print c.fixParsSig["ZprimeWW"]['NP']
+
+    print c.minMX

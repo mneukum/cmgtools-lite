@@ -62,9 +62,6 @@ if options.name.find("BulkGZZ")!=-1:
 period = "2016"
 if options.name.find("2017")!=-1: period = "2017"
 
-#if options.label.find("sigonly")!=-1:
-    #doFit=False
-
 
 def calculateChi2ForSig(hsig,pred,axis,logfile,label):
     if axis.find("z")!=-1:
@@ -424,6 +421,17 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
         text = "Z' (%.1f TeV) #rightarrow ZH (#times %i)"%(options.signalMass/1000.,scaling)
         if (options.signalMass%1000.)==0:
             text = "Z' (%i TeV) #rightarrow ZH (#times %i)"%(options.signalMass/1000.,scaling) 
+            
+            
+    if signalName.find("WprimeWZ")!=-1:
+        text = "W' (%.1f TeV) #rightarrow WZ (#times %i)"%(options.signalMass/1000.,scaling)
+        if (options.signalMass%1000.)==0:
+            text = "W' (%i TeV) #rightarrow WZ (#times %i)"%(options.signalMass/1000.,scaling) 
+            
+    if signalName.find("WprimeWH")!=-1:
+        text = "W' (%.1f TeV) #rightarrow WH (#times %i)"%(options.signalMass/1000.,scaling)
+        if (options.signalMass%1000.)==0:
+            text = "W' (%i TeV) #rightarrow WH (#times %i)"%(options.signalMass/1000.,scaling) 
      
     if options.fitSignal==True: 
         leg.AddEntry(hsig,text,"F")

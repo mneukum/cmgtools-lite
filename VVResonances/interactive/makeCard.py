@@ -5,6 +5,8 @@ import json
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
 from CMGTools.VVResonances.statistics.DataCardMaker import DataCardMaker
 from optparse import OptionParser
+import cuts
+
 
 parser = OptionParser()
 parser.add_option("-p","--period",dest="period",default="2016,2017",help="run period")
@@ -44,29 +46,29 @@ if outlabel.find("sigonly")!=-1 or outlabel.find("Vjetsonly")!=-1: sf_qcd = 0.00
 
 resultsDir = {'2016':'results_2016','2017':'results_2017'}
 
-lumi = {'2016':35900,'2017':41367}
-lumi_unc = {'2016':1.025,'2017':1.023}
+# vtag uncertainty is added through the migrationunc.json file 
+# all other uncertainties and SF from one place: defined in init_VV_VH.json imported via the class defined in cuts.py
+ctx16 = cuts.cuts("init_VV_VH.json",2016,"dijetbins_random")
+ctx17 = cuts.cuts("init_VV_VH.json",2017,"dijetbins_random")
+ctx18 = cuts.cuts("init_VV_VH.json",2018,"dijetbins_random")
 
-scales = {"2017" :[0.983,1.08], "2016":[1.014,1.086]}
-scalesHiggs = {"2017" :[0.983,1.08], "2016":[1.014,1.086]}
+lumi = {'2016':ctx16.lumi,'2017':ctx17.lumi, '2018':ctx18.lumi}
+lumi_unc = {'2016':ctx16.lumi_unc,'2017':ctx17.lumi_unc, '2018':ctx18.lumi_unc}
+
+#scales = {"2017" :[ctx17.W_HPmassscale,ctx17.W_LPmassscale], "2016":[ctx16.W_HPmassscale,ctx16.W_LPmassscale], "2018":[ctx18.W_HPmassscale,ctx18.W_LPmassscale]}
+#scalesHiggs = {"2017" :[ctx17.H_HPmassscale,ctx17.H_LPmassscale], "2016":[ctx16.H_HPmassscale,ctx16.H_LPmassscale], "2018":[ctx18.H_HPmassscale,ctx18.H_LPmassscale]}
+
+scales = {"2017" :[1,1], "2016":[1,1], "2018":[1,1]}
+scalesHiggs = {"2017" :[1,1], "2016":[1,1], "2018":[1,1]}
 
 
 
 #quick fix to add VH !!!
-vtag_unc = {'VV_HPHP':{},'VV_HPLP':{},'VV_LPLP':{},'VH_HPHP':{},'VH_HPLP':{},'VH_LPHP':{}}
-
-vtag_unc['VV_HPHP'] = {'2016':'1.232/0.792','2017':'1.269/0.763'}
-vtag_unc['VV_HPLP'] = {'2016':'0.882/1.12','2017':'0.866/1.136'}    
-vtag_unc['VV_LPLP'] = {'2016':'1.063','2017':'1.043'}
-vtag_unc['VH_HPHP'] = {'2016':'1.','2017':'1.'}
-vtag_unc['VH_HPLP'] = {'2016':'1.','2017':'1.'}
-
-
-vtag_pt_dependence = {'VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))','VH_HPHP':'1','VH_HPLP':'1'}
+vtag_pt_dependence = {"2016" : ctx16.vtag_pt_dependence,"2017" : ctx17.vtag_pt_dependence,"2018" : ctx18.vtag_pt_dependence}
 
 
 doCorrelation = True 
-Tools = DatacardTools(scales,scalesHiggs,vtag_pt_dependence,lumi_unc,vtag_unc,sf_qcd,pseudodata,outlabel,doCorrelation)
+Tools = DatacardTools(scales,scalesHiggs,vtag_pt_dependence,lumi_unc,sf_qcd,pseudodata,outlabel,doCorrelation)
 
 for sig in signals:
   cmd ="combineCards.py"
