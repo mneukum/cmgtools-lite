@@ -112,12 +112,12 @@
     },
     
     "fixParsSig" : {"ZprimeZH":{
-    "NP":{"fixPars":"nH:129,n:2.4","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline,meanH:spline,sigmaH:spline,alphaH:spline,nH:spline,alpha2H:spline,n2H:spline"}},
+    "NP":{"fixPars":"alpha:0.8,alpha2:2.0,alphaH:0.6","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline,meanH:spline,sigmaH:spline,alphaH:spline,nH:spline,alpha2H:spline,n2H:spline"}},
     "BulkGWW":{"NP":{"fixPars":"n:5","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline"}}, 
     "BulkGZZ":{"NP":{"fixPars":"n:3.6,alpha:1","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline"}},
     "ZprimeWW":{"NP":{"fixPars":"n:14","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline"}},
     "WprimeWZ":{"NP":{"fixPars":"n:2.6,alpha:1.4","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline"}}, 
-    "WprimeWH":{"NP":{"fixPars":"nH:129,n:2.4,alphaH:0.6,alpha:1.14","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline,meanH:spline,sigmaH:spline,alphaH:spline,nH:spline,alpha2H:spline,n2H:spline"}}},
+    "WprimeWH":{"NP":{"fixPars":"n:7.0,alphaH:0.7","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline,meanH:spline,sigmaH:spline,alphaH:spline,nH:spline,alpha2H:spline,n2H:spline"}}},
     
     "fixParsSigMVV"  : {
                 "ZprimeZH":{"fixPars":"ALPHA2:2.42,N1:126.5", "pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline,corr_mean:pol1,corr_sigma:pol1"},

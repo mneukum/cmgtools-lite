@@ -464,8 +464,8 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
     pt2.SetBorderSize(0)
     pt2.SetFillStyle(0)
     pt2.AddText("category  "+purity)
-    #pt2.AddText(extra1)
-    #pt2.AddText(extra2)
+    pt2.AddText(extra1)
+    pt2.AddText(extra2)
     pt2.Draw()
 
     pt3 = ROOT.TPaveText(0.65,0.39,0.99,0.52,"NDC")
