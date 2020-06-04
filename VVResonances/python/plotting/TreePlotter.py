@@ -10,8 +10,6 @@ class TreePlotter(PlotterBase):
 
     def __init__(self,file,tree,weight = "1"):
         self.file = ROOT.TFile(file)
-        print self.file 
-        print tree
         self.tree = self.file.Get(tree)
         if tree ==0:
             print "Tree not found\n"

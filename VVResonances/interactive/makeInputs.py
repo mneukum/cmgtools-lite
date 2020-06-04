@@ -5,6 +5,7 @@ from cuts import cuts, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSig
 
 # python makeInputs.py -p 2016 --run "detector"
 # python makeInputs.py -p 2016 --run "signorm" --signal "ZprimeWW" --batch False 
+# python makeInputs.py -p 2016 --run "tt" --batch False 
 # python makeInputs.py -p 2016 --run "vjets" --batch False                                                                                                                                      
 # python makeInputs.py -p 2016 --run "qcdtemplates"
 # python makeInputs.py -p 2016 --run "qcdkernel"
@@ -19,7 +20,7 @@ parser.add_option("-s","--sorting",dest="sorting",help="b-tag or random sorting"
 parser.add_option("-b","--binning",action="store_false",dest="binning",help="use dijet binning or not",default=True)
 parser.add_option("--batch",action="store_false",dest="batch",help="submit to batch or not ",default=True)
 parser.add_option("--trigg",action="store_true",dest="trigg",help="add trigger weights or not ",default=False)
-parser.add_option("--run",dest="run",help="decide which parts of the code should be run right now possible optoins are: all : run everything, sigmvv: run signal mvv fit sigmj: run signal mj fit, signorm: run signal norm, vjets: run vjets , qcdtemplates: run qcd templates, qcdkernel: run qcd kernel, qcdnorm: run qcd merge and norm, detector: run detector fit , data : run the data or pseudodata scripts ",default="all")
+parser.add_option("--run",dest="run",help="decide which parts of the code should be run right now possible optoins are: all : run everything, sigmvv: run signal mvv fit sigmj: run signal mj fit, signorm: run signal norm, vjets: run vjets, tt: run ttbar , qcdtemplates: run qcd templates, qcdkernel: run qcd kernel, qcdnorm: run qcd merge and norm, detector: run detector fit , data : run the data or pseudodata scripts ",default="all")
 parser.add_option("--signal",dest="signal",default="BGWW",help="which signal do you want to run? options are BulkGWW, BulkGZZ, WprimeWZ, ZprimeWW, ZprimeZH")
 
 
@@ -64,23 +65,21 @@ if period == 2017:
 elif period == 2016:
     lumi = 35900.
 
-
-#signal regions
+#signal regions                                                                                                                                                                                             
 if sorting == 'random':
  print "Use random sorting!"
  print "ortoghonal VV + VH"
+
  catsAll = {}
- #scheme 2: improves VV HPHP (VH_HPHP -> VV_HPHP -> VH_LPHP,VH_HPLP -> VV_HPLP) 
- #at least one H tag HP (+ one V/H tag HP)                                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                  
  catsAll['VH_HPHP'] = '('+'&&'.join([catVtag['HP1'],catHtag['HP2']])+')'
  catsAll['HV_HPHP'] = '('+'&&'.join([catHtag['HP1'],catVtag['HP2']])+')'
  catsAll['HH_HPHP'] = '('+'&&'.join([catHtag['HP1'],catHtag['HP2']])+')'
  cuts['VH_HPHP'] = '('+'||'.join([catsAll['VH_HPHP'],catsAll['HV_HPHP'],catsAll['HH_HPHP']])+')'
- 
- # two V tag HP                                                                                                                                                                                                                                                                
+                                                                                                                                                           
  cuts['VV_HPHP'] = '('+'!'+cuts['VH_HPHP']+'&&'+'(' +  '&&'.join([catVtag['HP1'],catVtag['HP2']]) + ')' + ')'
-
- #at least one H-tag HP (+one V OR H-tag LP)                                                                                                                                                                                                                                   
+ #at least one H-tag HP (+one V OR H-tag LP)                                                                                                                                                                                   
+ 
  catsAll['VH_LPHP'] = '('+'&&'.join([catVtag['LP1'],catHtag['HP2']])+')'
  catsAll['HV_HPLP'] = '('+'&&'.join([catHtag['HP1'],catVtag['LP2']])+')'
  catsAll['HH_HPLP'] = '('+'&&'.join([catHtag['HP1'],catHtag['LP2']])+')'
@@ -107,12 +106,9 @@ else:
  cuts['VV_HPLP'] = '(' + '!' + cuts['VH_all'] + '&&' + '(' + '('+  '&&'.join([catVtag['HP1'],catVtag['LP2']]) + ')' + '||' + '(' + '&&'.join([catVtag['HP2'],catVtag['LP1']]) + ')' + ')' + ')'
 
 
-
 #all categories
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP','VBF_VV_HPHP','VBF_VV_HPLP']
-categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP']
-categories =["VH_LPHP"]
-                                                                                                                                                                                   
+
 #list of signal samples --> nb, radion and vbf samples to be added
 BulkGravWWTemplate="BulkGravToWW_"
 VBFBulkGravWWTemplate="VBF_BulkGravToWW_"
@@ -143,8 +139,7 @@ else:
     TTemplate= "TTToHadronic" #do we need a separate fit for ttbar?
 WresTemplate= "WJetsToQQ_HT400to600,WJetsToQQ_HT600to800,WJetsToQQ_HT800toInf,"+str(TTemplate)
 ZresTemplate= "ZJetsToQQ_HT400to600,ZJetsToQQ_HT600to800,ZJetsToQQ_HT800toInf"
-resTemplate= "ZJetsToQQ_HT400to600,ZJetsToQQ_HT600to800,ZJetsToQQ_HT800toInf,WJetsToQQ_HT400to600,WJetsToQQ_HT600to800,WJetsToQQ_HT800toInf,"+str(TTemplate)
-
+resTemplate= "ZJetsToQQ_HT400to600,ZJetsToQQ_HT600to800,ZJetsToQQ_HT800toInf,WJetsToQQ_HT400to600,WJetsToQQ_HT600to800,WJetsToQQ_HT800toInf"
 
       
 
@@ -307,9 +302,12 @@ if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:
     f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,cuts['nonres'],"nRes","",HPSF,LPSF)
     print "then norm Z"
     f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,cuts['nonres'],"nRes","",HPSF,LPSF)
-    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,cuts['nonres'],"nRes","") # ... so we do not need this
 
-
+if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
+    f.fitTT   ("JJ_TT",TTemplate,1.,)
+    f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,cuts['nonres'],"1D",0,1.,1.)
+    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,cuts['nonres'],"nRes","") 
+  
 if options.run.find("all")!=-1 or options.run.find("data")!=-1:
     print " Do data "
     f.makeNormalizations("data","JJ_"+str(period),dataTemplate,1,'1',"normD") #run on data. Currently run on pseudodata only (below)
@@ -321,6 +319,5 @@ if options.run.find("all")!=-1 or options.run.find("pseudoVJETS")!=-1:
     print " Do pseudodata with vjets: DID YOU PRODUCE THE WORKSPACE BEFORE???"
     from modules.submitJobs import makePseudoDataVjets
     for p in categories: makePseudoDataVjets("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDVjets_%s.root"%p,lumi,"results_"+str(period)+"/workspace_JJ_BulkGWW_"+p+"_13TeV_"+str(period)+"_VjetsPrep.root",period,p)
-
 
 print " ########## I did everything I could! ###### "

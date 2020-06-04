@@ -121,6 +121,9 @@ for filename in os.listdir(args[0]):
    dataPlotters[-1].addCorrectionFactor('xsec','tree')
    dataPlotters[-1].addCorrectionFactor('genWeight','tree')
    dataPlotters[-1].addCorrectionFactor('puWeight','tree')
+   if fname.find("QCD_Pt_") !=-1 or fname.find("QCD_HT") !=-1:
+       print "going to apply spikekiller for ",fname
+       dataPlotters[-1].addCorrectionFactor('b_spikekiller','tree')
    if options.triggerW: dataPlotters[-1].addCorrectionFactor('triggerWeight','tree')
    for w in weights_:
     if w != '': dataPlotters[-1].addCorrectionFactor(w,'branch')
@@ -128,6 +131,9 @@ for filename in os.listdir(args[0]):
    dataPlottersNW.append(TreePlotter(args[0]+'/'+fname+'.root','AnalysisTree'))
    dataPlottersNW[-1].addCorrectionFactor('puWeight','tree')
    dataPlottersNW[-1].addCorrectionFactor('genWeight','tree')
+   if fname.find("QCD_Pt_") !=-1 or fname.find("QCD_HT") !=-1:
+       print "going to apply spikekiller for ",fname
+       dataPlottersNW[-1].addCorrectionFactor('b_spikekiller','tree')
    if options.triggerW: dataPlottersNW[-1].addCorrectionFactor('triggerWeight','tree')
    for w in weights_: 
     if w != '': dataPlottersNW[-1].addCorrectionFactor(w,'branch')

@@ -226,6 +226,21 @@ class AllFunctions():
      print str(cmd)
      os.system(cmd)
 
+ def fitTT(self,filename,template,xsec=1):
+   for c in self.categories:
+     print("\r"+"Fitting ttbar in category %s" %c)
+     if 'VBF' in c: 
+       cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],self.cuts['acceptance']])
+     else: 
+       cut='*'.join([self.cuts['common_VV'],self.cuts[c],self.cuts['acceptance']])
+     outname=filename+"_"+c
+     pwd = os.getcwd()
+     directory=pwd+"/"+self.samples
+     fixPars="1" 
+     cmd='vvMakeTTShapes.py -s "{template}" -c "{cut}"  -o "{outname}" -m {minMJ} -M {maxMJ} --store "{filename}_{purity}.py" --minMVV {minMVV} --maxMVV {maxMVV} {addOption} --corrFactor {xsec} {samples} {lumi}'.format(template=template,cut=cut,outname=outname,minMJ=self.minMJ,maxMJ=self.maxMJ,filename=filename,purity=c,minMVV=self.minMVV,maxMVV=self.maxMVV,addOption="",xsec=xsec, samples=directory,lumi=self.lumi)
+     cmd+=self.HCALbinsMVV
+     os.system(cmd)
+     
 
  #this one I still have to fix and test, do not use submitToBatch yet
  def mergeKernelJobs(self,name,filename):
