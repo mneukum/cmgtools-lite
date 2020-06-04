@@ -89,7 +89,7 @@ def chooseBin(sample,b,binmidpoint):
         return b
     elif sample.find('WH')!=-1 or sample.find('Wh')!=-1:
         if b <= 55+2*binmidpoint and b > 65: b = 80
-        if b > 55+2*binmidpoint: b = 90
+        if b > 55+2*binmidpoint: b = 120
         return b
     
 def dodCBFits(h1,mass,prefix,fixpars):
@@ -194,7 +194,7 @@ if (options.sample.find("H")!=-1 or options.sample.find("h")!=-1 or options.samp
     if samples[mass].find("WZ")!=-1:
         print 'mean for WZ signal' 
         graph_sum_mean = ROOT.TH2F("corr_mean","corr_mean",2,array("f",[76,86,94]),2,array("f",[76,86,94]))
-    elif options.sample.find("WH")!=-1 or samples[mass].find("Wh")!=-1:
+    elif samples[mass].find("WH")!=-1 or samples[mass].find("Wh")!=-1:
         print 'mean for WH signal'
         graph_sum_mean  = ROOT.TH2F("corr_mean","corr_mean",2,array("f",[65,105,145]),2,array("f",[65,105,145]))
     elif samples[mass].find("ZH")!=-1 or samples[mass].find("Zh")!=-1:
@@ -209,8 +209,10 @@ if (options.sample.find("H")!=-1 or options.sample.find("h")!=-1 or options.samp
         bins_all = [[5,15],[15,25]]
         binmidpoint = 15
     elif options.sample.find("WH")!=-1 or options.sample.find("Wh")!=-1:
+        print " set bins for WH"
         bins_all = [[5,15],[15,50]]
         binmidpoint = 15
+        print bins_all
     
 
 for mass in sorted(samples.keys()):
@@ -304,6 +306,13 @@ if testcorr==True:
     print "sum sigma",  graph_sum_sigma
     graph_sum_sigma.Write()
     graph_sum_mean .Write()
+    tmp = graph_sum_mean
+    print "whats in mean?"
+    for x in range(1,tmp.GetXaxis().GetNbins()+1):
+        for y in range(1,tmp.GetXaxis().GetNbins()+1):
+            print x
+            print y
+            print tmp.GetBinContent(x,y)
 
 
 F.Close()

@@ -80,11 +80,12 @@ class DataCardMaker:
                 getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(name,name))
                 if (name.find('MEAN')!=-1 or name.find('SIGMA')!=-1) and corr==True:
                    print "MVV sigma & mean will be correlated to jet mass"
-                   self.w.factory("expr::"+uncsyst[0]+"expr('(1+"+uncstr+")*("+info['corr_'+variablename.lower()]+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")   else:
+                   self.w.factory("expr::"+uncsyst[0]+"expr_corr('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+")")  
+                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr_corr')))
+                else:
                    print "MVV sigma & mean will NOT be correlated to jet mass"
                    self.w.factory("expr::"+uncsyst[0]+"expr('"+uncstr+"',"+uncsyst[0]+")")
-
-                prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr')))
+                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr')))
                 getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(name,name))
 
                

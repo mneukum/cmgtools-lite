@@ -1,44 +1,46 @@
-bash/bin!
-# models=("BGZZ" "WprimeWZ" "ZprimeWW" "BGWW"  "ZprimeZH" "WprimeWH")
-# 
-# for model in ${models[@]}
-# do
-#     python makeInputs.py --signal ${model} --run signalnorm --batch False
-#     python makeInputs.py --signal ${model} --run signalmvv
-#     python makeInputs.py --signal ${model} --run signalmj
-#     cp JJ_${model}*.root results_2016/
-#     cp JJ_${model}*.json results_2016/
-# done
-# 
-# 
-# 
-# 
-# python drawFittedParameters.py results_2016/
-# cp results_2016/Signal_mjet2016_NP_*.pdf /home/dschaefer/Documents/AnalysisNotes2/AN-19-131/figures/signal/
-# 
-# 
-# python plotSignalShapesFromJSON.py  --category NP -o results_2016/
-# cp results_2016/signalShapes_mVV_NP_2016_All_test.pdf /home/dschaefer/Documents/AnalysisNotes2/
-# 
-# python plotSignalShapesFromJSON.py --var mJ --category NP -o results_2016/
-# cp results_2016/signalShapes_mJ_NP_2016_All_test.pdf /home/dschaefer/Documents/AnalysisNotes2/
-# 
-# 
-# # now make the signal only cards !!!!
-# python /portal/ekpbms2/home/dschaefer/DiBoson3D/makePseudoData.py --which sigonly
- models=("BulkGZZ"  "WprimeWZ" "ZprimeWW" "BulkGWW"  "ZprimeZH" "WprimeWH")
- category=( "VV_HPHP"  "VH_HPHP" "VH_HPLP" "VH_LPHP" "VV_HPLP")
- #models=("WprimeWZ")
+#bin/bash!
+models=("BGZZ" "WprimeWZ" "ZprimeWW" "BGWW"  "ZprimeZH" "WprimeWH")
+models=("WprimeWH")
+
 
 for model in ${models[@]}
 do
-  for c in ${category[@]}
-  do
-   python makeCard.py --outlabel "sigonly_M4000" --pseudodata $model --signal $model --category $c --period "2016"
-  
-   python makeCard.py --outlabel "sigonly_M2000" --pseudodata $model --signal $model --category $c --period "2016"
-  done 
+    python makeInputs.py --signal ${model} --run signalnorm --batch False
+    python makeInputs.py --signal ${model} --run signalmvv
+    python makeInputs.py --signal ${model} --run signalmj
+    cp JJ_${model}*.root results_2016/
+    cp JJ_${model}*.json results_2016/
 done
+
+
+
+
+python drawFittedParameters.py results_2016/
+cp results_2016/Signal_mjet2016_NP_*.pdf /home/dschaefer/Documents/AnalysisNotes2/AN-19-131/figures/signal/
+
+
+python plotSignalShapesFromJSON.py  --category NP -o results_2016/
+cp results_2016/signalShapes_mVV_NP_2016_All_test.pdf /home/dschaefer/Documents/AnalysisNotes2/
+
+python plotSignalShapesFromJSON.py --var mJ --category NP -o results_2016/
+cp results_2016/signalShapes_mJ_NP_2016_All_test.pdf /home/dschaefer/Documents/AnalysisNotes2/
+
+
+# now make the signal only cards !!!!
+python /work/dschaefer/DiBoson3D/makePseudoData.py --which sigonly
+ models=("BulkGZZ"  "WprimeWZ" "ZprimeWW" "BulkGWW"  "ZprimeZH" "WprimeWH")
+ category=( "VV_HPHP"  "VH_HPHP" "VH_HPLP" "VH_LPHP" "VV_HPLP")
+models=("WprimeWH")
+
+ for model in ${models[@]}
+ do
+   for c in ${category[@]}
+   do
+       python makeCard.py --outlabel "sigonly_M4000" --pseudodata $model --signal $model --category $c --period "2016"
+  
+    python makeCard.py --outlabel "sigonly_M2000" --pseudodata $model --signal $model --category $c --period "2016"
+   done 
+ done
 
 
 masses=(4000  2000)
@@ -47,7 +49,7 @@ mkdir postfitplots/
 
 
 models=("BulkGWW" "WprimeWZ" "ZprimeWW" "BulkGZZ" "ZprimeZH" "WprimeWH")
-#models=("WprimeWZ")
+models=("WprimeWH")
 
 
 for model in ${models[@]}
