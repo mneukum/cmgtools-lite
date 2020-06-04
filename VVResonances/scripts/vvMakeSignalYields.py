@@ -7,13 +7,10 @@ from CMGTools.VVResonances.plotting.MergedPlotter import MergedPlotter
 from CMGTools.VVResonances.plotting.StackPlotter import StackPlotter
 from CMGTools.VVResonances.statistics.Fitter import Fitter
 from math import log
+from CMGTools.VVResonances.plotting.VarTools import returnString
 import os, sys, re, optparse,pickle,shutil,json
 
-def returnString(func):
-    st='0'
-    for i in range(0,func.GetNpar()):
-        st=st+"+("+str(func.GetParameter(i))+")"+("*MH"*i)
-    return st    
+
 
 
 parser = optparse.OptionParser()
@@ -83,12 +80,14 @@ for mass in sorted(samples.keys()):
 
 
 
+if options.function != "spline":
+    func = ROOT.TF1("func",options.function,options.min,options.max)
+    yieldgraph.Fit(func,"R")
+else:
+    func = ROOT.TSpline3("func",yieldgraph)
+    func.SetLineColor(ROOT.kRed)
 
-func = ROOT.TF1("func",options.function,options.min,options.max)
-yieldgraph.Fit(func,"R")
-
-
-parameterization={'yield':returnString(func)}
+parameterization={'yield':returnString(func,options.function)}
 f=open(options.output+".json","w")
 json.dump(parameterization,f)
 f.close()
@@ -101,6 +100,7 @@ f.Close()
 c=ROOT.TCanvas("c")
 c.cd()
 yieldgraph.Draw("AP")
+func.Draw("lsame")
 c.SaveAs("debug_"+options.output+".png")
 
 #F=ROOT.TFile(options.output+".root",'RECREATE')

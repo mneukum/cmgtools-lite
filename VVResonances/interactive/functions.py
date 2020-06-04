@@ -57,7 +57,7 @@ class AllFunctions():
     cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixPars["NP"]["pol"])
     os.system(cmd)
 
- def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0}):
+ def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0},functype="pol5"):
  
   print "using the following scalfactors:" ,sfP
   
@@ -65,8 +65,7 @@ class AllFunctions():
    if 'VBF' in c: cut = "*".join([self.cuts[c.replace('VBF_','')],self.cuts['common_VBF'],self.cuts['acceptance'],str(sfP[c.replace('VBF_','')])])
    else: cut = "*".join([self.cuts[c],self.cuts['common_VV'],self.cuts['acceptance'],str(sfP[c])])
    yieldFile=filename+"_"+c+"_yield"
-   fnc = "pol7"
-   if filename.find('WZ')!=-1: fnc= "pol5"
+   fnc = functype
    cmd='vvMakeSignalYields.py -s {template} -c "{cut}" -o {output} -V "jj_LV_mass" -m {minMVV} -M {maxMVV} -f {fnc} -b {BR} --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template, cut=cut, output=yieldFile,minMVV=self.minMVV,maxMVV=self.maxMVV,fnc=fnc,BR=branchingFraction,minMX=self.minMX,maxMX=self.maxMX,samples=self.samples)
    os.system(cmd)
 

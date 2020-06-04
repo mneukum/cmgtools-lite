@@ -2,6 +2,8 @@ import ROOT
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
 import json
 import sys
+from array import array
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
 
 class DataCardMaker:
@@ -29,7 +31,68 @@ class DataCardMaker:
     def addSystematic(self,name,kind,values,addPar = ""):
         self.systematics.append({'name':name,'kind':kind,'values':values })
 
+    def recoverFunctionFromJSON(self,jsonFile,variablename,name,corr,uncstr="",uncsyst=[1,1]):
+        #open json
+        f=open(jsonFile)
+        info=json.load(f)
+        # check if json contains array or not:
+        if isinstance(info[variablename],list) == False:
+        # set polynomial with parameters from jsonFile
+            if (name.find('MEAN')==-1 and name.find("SIGMA")==-1): 
+                self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=name,param=info[variablename]))
+            else:
+                if corr==True:
+                    print "MVV sigma & mean will be correlated to jet mass"
+                    self.w.factory("expr::"+name+"('("+info[variablename]+")*"+info['corr_'+variablename.lower()]+"*(1+"+uncstr+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")
+                else:
+                    print "MVV sigma & mean will NOT be correlated to jet mass"
+                    self.w.factory("expr::"+name+"('("+info[varname]+")*(1+"++")',MH,"+','.join(uncysts)+")")
+            
+        # no need to return since this is already in the WS
+        
+        else:
+            # set spline with knots from jsonFile 
+            # first: make a two arrays from json 
+            l = info[variablename]
+            xArr =[]
+            yArr =[]
+            for i in range(0,len(l)):
+                xArr.append(l[i][0])
+                yArr.append(l[i][1])
+            if variablename.find("yield")!=-1:
+                print " make spline " + name+'spline'
+                spline=ROOT.RooSpline1D(name+'spline',name+'spline',self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))    
+                getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(name,name))
+                print " make uncertainty "+"expr::"+corr+"expr('"+self.physics+"_"+self.period+"_lumi"+"*(exp(log("+uncstr+")*"+corr+"',MH,"+corr+","+self.physics+"_"+self.period+"_lumi"+")"
+                
+                self.w.factory("expr::"+corr+"expr('"+self.physics+"_"+self.period+"_lumi"+"*(exp(log("+uncstr+")*"+corr+"',MH,"+corr+","+self.physics+"_"+self.period+"_lumi"+")")
+                
+                print " make product" + name 
+                prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(corr+'expr')))
+                getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(name,name))
+                print "-------------------------------------------"
+     
+            elif (name.find('MEAN')==-1 and name.find("SIGMA")==-1) and (name.find('mean')==-1 and name.find("sigma")==-1) and (name.find('meanH')==-1 and name.find("sigmaH")==-1): 
+                spline=ROOT.RooSpline1D(name,name,self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))    
+                getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(name,name))
+            else:
+                spline=ROOT.RooSpline1D(name+'spline',name+'spline',self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))
+                getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(name,name))
+                if (name.find('MEAN')!=-1 or name.find('SIGMA')!=-1) and corr==True:
+                   print "MVV sigma & mean will be correlated to jet mass"
+                   self.w.factory("expr::"+uncsyst[0]+"expr_corr('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+")")  
+                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr_corr')))
+                else:
+                   print "MVV sigma & mean will NOT be correlated to jet mass"
+                   self.w.factory("expr::"+uncsyst[0]+"expr('"+uncstr+"',"+uncsyst[0]+")")
+                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr')))
+                getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(name,name))
 
+               
+                
+        f.close()
+        
+        
     def addMVVSignalParametricShape(self,name,variable,jsonFile,scale ={},resolution={},doCorrelation=False):
         self.w.factory("MH[2000]")
         self.w.var("MH").setConstant(1)
@@ -47,15 +110,15 @@ class DataCardMaker:
             self.w.factory(syst+"[0,-0.5,0.5]")
             resolutionStr=resolutionStr+"+{factor}*{syst}".format(factor=factor,syst=syst)
             resolutionSysts.append(syst)
-       
+            print syst
         MVV=variable            
         self.w.factory(variable+"[0,13000]")
         self.w.factory("MJ1[0,13000]")
         self.w.factory("MJ2[0,13000]")
 
         
-        f=open(jsonFile)
-        info=json.load(f)
+        #f=open(jsonFile)
+        #info=json.load(f)
 
         SCALEVar="_".join(["MEAN",name,self.tag])
         SIGMAVar="_".join(["SIGMA",name,self.tag])
@@ -63,25 +126,33 @@ class DataCardMaker:
         ALPHA2Var="_".join(["ALPHA2",name,self.tag])
         N2Var="_".join(["N2",name,self.tag])
         N1Var="_".join(["N1",name,self.tag])
-        if doCorrelation:
-            print "MVV sigma & mean will be correlated to jet mass"
-            self.w.factory("expr::"+SIGMAVar+"('("+info['SIGMA']+")*"+info['corr_sigma']+"*(1+"+resolutionStr+")',{MH,MJ1,MJ2},"+resolutionSysts[0]+")")
-            self.w.factory("expr::"+SCALEVar+"('("+info['MEAN']+")*"+info['corr_mean']+"*(1+"+scaleStr+")',{MH,MJ1,MJ2},"+scaleSysts[0]+")")
-        else:
-            print "MVV sigma & mean will NOT be correlated to jet mass"
-            self.w.factory("expr::"+SCALEVar+"('("+info['MEAN']+")*(1+"+scaleStr+")',MH,"+','.join(scaleSysts)+")")
-            self.w.factory("expr::"+SIGMAVar+"('("+info['SIGMA']+")*(1+"+resolutionStr+")',MH,"+','.join(resolutionSysts)+")")
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHA2Var,param=info['ALPHA2']))
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHA1Var,param=info['ALPHA1']))
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N1Var,param=info['N1']))
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N2Var,param=info['N2']))  
+        
+        self.recoverFunctionFromJSON(jsonFile,"MEAN",SCALEVar,doCorrelation,"(1+"+scaleStr+")",scaleSysts)
+        self.recoverFunctionFromJSON(jsonFile,"SIGMA",SIGMAVar,doCorrelation,"(1+"+resolutionStr+")",resolutionSysts)
+        self.recoverFunctionFromJSON(jsonFile,"ALPHA1",ALPHA1Var,doCorrelation)
+        self.recoverFunctionFromJSON(jsonFile,"ALPHA2",ALPHA2Var,doCorrelation)
+        self.recoverFunctionFromJSON(jsonFile,"N1",N1Var,doCorrelation)
+        self.recoverFunctionFromJSON(jsonFile,"N2",N2Var,doCorrelation)
+        
+        #if doCorrelation:
+            #print "MVV sigma & mean will be correlated to jet mass"
+            #self.w.factory("expr::"+SIGMAVar+"('("+info['SIGMA']+")*"+info['corr_sigma']+"*(1+"+resolutionStr+")',{MH,MJ1,MJ2},"+resolutionSysts[0]+")")
+            #self.w.factory("expr::"+SCALEVar+"('("+info['MEAN']+")*"+info['corr_mean']+"*(1+"+scaleStr+")',{MH,MJ1,MJ2},"+scaleSysts[0]+")")
+        #else:
+            #print "MVV sigma & mean will NOT be correlated to jet mass"
+            #self.w.factory("expr::"+SCALEVar+"('("+info['MEAN']+")*(1+"++")',MH,"+','.join(scaleSysts)+")")
+            #self.w.factory("expr::"+SIGMAVar+"('("+info['SIGMA']+")*(1+"+resolutionStr+")',MH,"+','.join(resolutionSysts)+")")
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHA2Var,param=info['ALPHA2']))
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHA1Var,param=info['ALPHA1']))
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N1Var,param=info['N1']))
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N2Var,param=info['N2']))  
                 
 
         pdfName="_".join([name,self.tag])
         vvMass = ROOT.RooDoubleCB(pdfName,pdfName,self.w.var(MVV),self.w.function(SCALEVar),self.w.function(SIGMAVar),self.w.function(ALPHA1Var),self.w.function(N1Var),self.w.function(ALPHA2Var),self.w.function(N2Var))
         vvMass.setStringAttribute("CACHEPARAMINT",MVV+":MJ1:MJ2")
  	getattr(self.w,'import')(vvMass,ROOT.RooFit.RenameVariable(pdfName,pdfName))
-        f.close()
+        
 	
     def addMVVSignalParametricShape2(self,name,variable,jsonFile,scale ={},resolution={}):
 
@@ -342,7 +413,7 @@ class DataCardMaker:
 
 
    
-    def addMJJSignalParametricShapeNOEXP(self,name,variable,jsonFile,scale ={},resolution={},scales=[1,1],varToReplace="MH"):
+    def addMJJSignalParametricShapeNOEXP(self,name,variable,jsonFile,scale ={},resolution={},scales=[1,1],allvars={"alpha": "alpha","alpha2": "alpha2","n": "n","n2": "n2","mean": "mean","sigma": "sigma" },varToReplace="MH"):
 
         if self.w.var("MH") == None: self.w.factory("MH[2000]")
 	self.w.var("MH").setVal(2000.)
@@ -363,91 +434,90 @@ class DataCardMaker:
 
             resolutionSysts.append(syst)
        
+        
+       
         MJJ=variable            
         if self.w.var(MJJ) == None: self.w.factory(MJJ+"[0,1000]")
 
-        f=open(jsonFile)
-        info=json.load(f)
-
-        SCALEVar="_".join(["mean",name,self.tag])
-        self.w.factory("expr::{name}('({param}*{sc})*(1+{vv_syst})',MH,{vv_systs})".format(name=SCALEVar,param=info['mean'],sc=scales[0],vv_syst=scaleStr,vv_systs=','.join(scaleSysts)).replace("MH",varToReplace))
-
+        SCALEVar="_".join([allvars["mean"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["mean"],SCALEVar,False,"(1+"+scaleStr+")*"+str(scales[0]),scaleSysts)
         
-        SIGMAVar="_".join(["sigma",name,self.tag])
-        self.w.factory("expr::{name}('({param}*{res})*(1+{vv_syst})',MH,{vv_systs})".format(name=SIGMAVar,param=info['sigma'],res=scales[1],vv_syst=resolutionStr,vv_systs=','.join(resolutionSysts)).replace("MH",varToReplace))
+        SIGMAVar="_".join([allvars["sigma"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["sigma"],SIGMAVar,False,str(scales[1])+"*(1+"+resolutionStr+")",resolutionSysts)
 
-        ALPHAVar="_".join(["alpha",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar,param=info['alpha']).replace("MH",varToReplace))
+        ALPHAVar="_".join([allvars["alpha"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["alpha"],ALPHAVar,False)
 
-        NVar="_".join(["n",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar,param=info['n']).replace("MH",varToReplace))
+        NVar="_".join([allvars["n"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["n"],NVar,False)
 
-        ALPHAVar2="_".join(["alpha2",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar2,param=info['alpha2']).replace("MH",varToReplace))
+        ALPHAVar2="_".join([allvars["alpha2"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["alpha2"],ALPHAVar2,False)
 
-        NVar2="_".join(["n2",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar2,param=info['n2']).replace("MH",varToReplace))
+        NVar2="_".join([allvars["n2"],name,self.tag])
+        self.recoverFunctionFromJSON(jsonFile,allvars["n2"],NVar2,False)
 
         pdfName="_".join([name,self.tag])
         vvMass = ROOT.RooDoubleCB(pdfName,pdfName,self.w.var(MJJ),self.w.function(SCALEVar),self.w.function(SIGMAVar),self.w.function(ALPHAVar),self.w.function(NVar),self.w.function(ALPHAVar2),self.w.function(NVar2))
         getattr(self.w,'import')(vvMass,ROOT.RooFit.RenameVariable(pdfName,pdfName))
 
-        f.close()
+
         
-    def addMJJSignalParametricShapeHiggs(self,name,variable,jsonFile,scale ={},resolution={},scales=[1,1],varToReplace="MH"):
+    def addMJJSignalParametricShapeHiggs(self,name,variable,jsonFile,scale ={},resolution={},scales=[1,1],allvars={"alpha": "alphaH","alpha2": "alpha2H","n": "nH","n2": "n2H","mean": "meanH","sigma": "sigmaH" },varToReplace="MH"):
+        
+        
+        print scale
+        print resolution
+        self.addMJJSignalParametricShapeNOEXP(name,variable,jsonFile,scale,resolution,scales,allvars,varToReplace)
+        
+        #scaleStr='0'
+        #resolutionStr='0'
 
-        #if self.w.var("MH") == None: self.w.factory("MH[2000]")
-	#self.w.var("MH").setVal(2000.)
-        #self.w.var("MH").setConstant(1)
+        #scaleSysts=[]
+        #resolutionSysts=[]
+        #for syst,factor in scale.iteritems():
+            #if self.w.var(syst) == None: self.w.factory(syst+"[0,-0.1,0.1]")
+            #scaleStr=scaleStr+"+{factor}*{syst}".format(factor=factor,syst=syst)
+            #scaleSysts.append(syst)
+        #for syst,factor in resolution.iteritems():
+            #if self.w.var(syst) == None: self.w.factory(syst+"[0,-0.5,0.5]")
+            #resolutionStr=resolutionStr+"+{factor}*{syst}".format(factor=factor,syst=syst)
+
+            #resolutionSysts.append(syst)
        
-        scaleStr='0'
-        resolutionStr='0'
+        #MJJ=variable            
+        #if self.w.var(MJJ) == None: self.w.factory(MJJ+"[0,13000]")
 
-        scaleSysts=[]
-        resolutionSysts=[]
-        for syst,factor in scale.iteritems():
-            if self.w.var(syst) == None: self.w.factory(syst+"[0,-0.1,0.1]")
-            scaleStr=scaleStr+"+{factor}*{syst}".format(factor=factor,syst=syst)
-            scaleSysts.append(syst)
-        for syst,factor in resolution.iteritems():
-            if self.w.var(syst) == None: self.w.factory(syst+"[0,-0.5,0.5]")
-            resolutionStr=resolutionStr+"+{factor}*{syst}".format(factor=factor,syst=syst)
+        #f=open(jsonFile)
+        #info=json.load(f)
+        #print "attention : "
+        #print "meanH "+str(info['meanH'])
+        #print variable
+        #print jsonFile
+        #SCALEVar="_".join(["meanH",name,self.tag])
+        #self.w.factory("expr::{name}('({param}*{sc})*(1+{vv_syst})',MH,{vv_systs})".format(name=SCALEVar,param=info['meanH'],sc=scales[0],vv_syst=scaleStr,vv_systs=','.join(scaleSysts)).replace("MH",varToReplace))
 
-            resolutionSysts.append(syst)
-       
-        MJJ=variable            
-        if self.w.var(MJJ) == None: self.w.factory(MJJ+"[0,13000]")
+        #print info['meanH']
+        #SIGMAVar="_".join(["sigmaH",name,self.tag])
+        #self.w.factory("expr::{name}('({param}*{res})*(1+{vv_syst})',MH,{vv_systs})".format(name=SIGMAVar,param=info['sigmaH'],res=scales[1],vv_syst=resolutionStr,vv_systs=','.join(resolutionSysts)).replace("MH",varToReplace))
 
-        f=open(jsonFile)
-        info=json.load(f)
-        print "attention : "
-        print "meanH "+str(info['meanH'])
-        print variable
-        print jsonFile
-        SCALEVar="_".join(["meanH",name,self.tag])
-        self.w.factory("expr::{name}('({param}*{sc})*(1+{vv_syst})',MH,{vv_systs})".format(name=SCALEVar,param=info['meanH'],sc=scales[0],vv_syst=scaleStr,vv_systs=','.join(scaleSysts)).replace("MH",varToReplace))
+        #ALPHAVar="_".join(["alphaH",name,self.tag])
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar,param=info['alphaH']).replace("MH",varToReplace))
 
-        print info['meanH']
-        SIGMAVar="_".join(["sigmaH",name,self.tag])
-        self.w.factory("expr::{name}('({param}*{res})*(1+{vv_syst})',MH,{vv_systs})".format(name=SIGMAVar,param=info['sigmaH'],res=scales[1],vv_syst=resolutionStr,vv_systs=','.join(resolutionSysts)).replace("MH",varToReplace))
+        #NVar="_".join(["nH",name,self.tag])
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar,param=info['nH']).replace("MH",varToReplace))
 
-        ALPHAVar="_".join(["alphaH",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar,param=info['alphaH']).replace("MH",varToReplace))
+        #ALPHAVar2="_".join(["alpha2H",name,self.tag])
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar2,param=info['alpha2H']).replace("MH",varToReplace))
 
-        NVar="_".join(["nH",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar,param=info['nH']).replace("MH",varToReplace))
+        #NVar2="_".join(["n2H",name,self.tag])
+        #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar2,param=info['n2H']).replace("MH",varToReplace))
 
-        ALPHAVar2="_".join(["alpha2H",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHAVar2,param=info['alpha2H']).replace("MH",varToReplace))
+        #pdfName="_".join([name,self.tag])
+        #vvMass = ROOT.RooDoubleCB(pdfName,pdfName,self.w.var(MJJ),self.w.function(SCALEVar),self.w.function(SIGMAVar),self.w.function(ALPHAVar),self.w.function(NVar),self.w.function(ALPHAVar2),self.w.function(NVar2))
+        #getattr(self.w,'import')(vvMass,ROOT.RooFit.RenameVariable(pdfName,pdfName))
 
-        NVar2="_".join(["n2H",name,self.tag])
-        self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=NVar2,param=info['n2H']).replace("MH",varToReplace))
-
-        pdfName="_".join([name,self.tag])
-        vvMass = ROOT.RooDoubleCB(pdfName,pdfName,self.w.var(MJJ),self.w.function(SCALEVar),self.w.function(SIGMAVar),self.w.function(ALPHAVar),self.w.function(NVar),self.w.function(ALPHAVar2),self.w.function(NVar2))
-        getattr(self.w,'import')(vvMass,ROOT.RooFit.RenameVariable(pdfName,pdfName))
-
-        f.close()    
+        #f.close()    
 
     def addMJJSignalShapeNOEXP(self,name,variable,newTag="",preconstrains={},scale ={},resolution={},scales=[1,1]):
        
@@ -1422,20 +1492,40 @@ class DataCardMaker:
 
 
     def addParametricYieldWithUncertainty(self,name,ID,jsonFile,constant,uncertaintyName,uncertaintyFormula,uncertaintyValue):
-        f=open(jsonFile)
-        info=json.load(f)
         pdfName="_".join([name,self.tag])
         pdfNorm="_".join([name,self.tag,"norm"])
         self.w.factory(uncertaintyName+'[0,-1,1]')
+        f=open(jsonFile)
+        info=json.load(f)
         #self.w.factory("expr::{name}('({param})*{lumi}*({constant}+{unc}*{form})',MH,{lumi},{unc})".format(name=pdfNorm,param=info['yield'],lumi=self.physics+"_"+self.period+"_lumi",constant=constant,unc=uncertaintyName,form=uncertaintyFormula))
         #this formula is better: y*exp(log(unc)*theta)
-        self.w.factory("expr::{name}('({param})*{lumi}*(exp(log({form})*{unc}))',MH,{lumi},{unc})".format(name=pdfNorm,param=info['yield'],lumi=self.physics+"_"+self.period+"_lumi",constant=constant,unc=uncertaintyName,form=uncertaintyFormula))
+        if isinstance(info['yield'],list) == False:
+            self.w.factory("expr::{name}('({param})*{lumi}*(exp(log({form})*{unc}))',MH,{lumi},{unc})".format(name=pdfNorm,param=info['yield'],lumi=self.physics+"_"+self.period+"_lumi",constant=constant,unc=uncertaintyName,form=uncertaintyFormula))
+        else:
+            l = info['yield']
+            xArr =[]
+            yArr =[]
+            for i in range(0,len(l)):
+                xArr.append(l[i][0])
+                yArr.append(l[i][1])
+            spline=ROOT.RooSpline1D(pdfNorm+'spline',pdfNorm+'spline',self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))    
+            getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(pdfNorm+'spline',pdfNorm+'spline'))
+            self.w.factory("expr::{name}('{lumi}*(exp(log({form})*{unc}))',MH,{lumi},{unc})".format(name=pdfNorm+"expr",lumi=self.physics+"_"+self.period+"_lumi",constant=constant,unc=uncertaintyName,form=uncertaintyFormula))
+            prd = ROOT.RooProduct(pdfNorm,pdfNorm,ROOT.RooArgList(self.w.function(pdfNorm+'spline'),self.w.function(pdfNorm+'expr')))
+            getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(pdfNorm,pdfNorm))
+            
+        
+        
         self.addSystematic(uncertaintyName,"param",[0,uncertaintyValue])
         f.close()
         self.contributions.append({'name':name,'pdf':pdfName,'ID':ID,'yield':1.0})
 
 
     def addParametricYieldWithCrossSection(self,name,ID,jsonFile,jsonFileCS,sigmaStr,BRStr):
+        print "======================================"
+        print "00000000000000000000000000000000000000000000"
+        print "addParametricYieldWithCrossSection"
+        
         ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
         from array import array
         #first load cross section
@@ -1464,6 +1554,7 @@ class DataCardMaker:
         self.contributions.append({'name':name,'pdf':pdfName,'ID':ID,'yield':1.0})
 
     def addParametricYieldWithCrossSectionAndUncertainties(self,name,ID,jsonFile,jsonFileCS,sigmaStr,BRStr,sigmaStrP,sigmaStrM,constant,uncertaintyName,uncertaintyFormula,uncertaintyValue):
+        
         ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
         from array import array
         #first load cross section
@@ -1536,7 +1627,21 @@ class DataCardMaker:
 
         self.w.factory(uncertaintyName+'[0,-1,1]')
 
-        self.w.factory("expr::{name}('({param})*{lumi}*({sigma})*({constant}+{unc}*{form})',MH,{lumi},{sigma},{unc})".format(name=pdfNorm,param=info['yield'],lumi=self.physics+"_"+self.period+"_lumi",sigma=pdfSigma,constant=constant,unc=uncertaintyName,form=uncertaintyFormula))       
+        if isinstance(info['yield'],list) == False:
+            self.w.factory("expr::{name}('({param})*{lumi}*({sigma})*({constant}+{unc}*{form})',MH,{lumi},{sigma},{unc})".format(name=pdfNorm,param=info['yield'],lumi=self.physics+"_"+self.period+"_lumi",sigma=pdfSigma,constant=constant,unc=uncertaintyName,form=uncertaintyFormula)) 
+        else:
+            l = info['yield']
+            xArr =[]
+            yArr =[]
+            for i in range(0,len(l)):
+                xArr.append(l[i][0])
+                yArr.append(l[i][1])
+            spline=ROOT.RooSpline1D(pdfNorm+'spline',pdfNorm+'spline',self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))    
+            getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(pdfNorm+'spline',pdfNorm+'spline'))
+            self.w.factory("expr::{name}('{lumi}*({sigma})*({constant}+{unc}*{form})',MH,{lumi},{sigma},{unc})".format(name=pdfNorm+'expr',lumi=self.physics+"_"+self.period+"_lumi",sigma=pdfSigma,constant=constant,unc=uncertaintyName,form=uncertaintyFormula))
+            prd = ROOT.RooProduct(pdfNorm,pdfNorm,ROOT.RooArgList(self.w.function(pdfNorm+'spline'),self.w.function(pdfNorm+'expr')))
+            getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(pdfNorm,pdfNorm))
+           
         f.close()
         self.addSystematic(uncertaintyName,"param",[0,uncertaintyValue])
         self.contributions.append({'name':name,'pdf':pdfName,'ID':ID,'yield':1.0})

@@ -5,24 +5,9 @@
 import ROOT
 from optparse import OptionParser
 import sys,os
-from cuts import cuts, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSignal
+import cuts #, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSignal
 import json
 
-
-W_tag_SF_HP = {"2016":1.014  , "2017":0.983  , "2018": 1. }
-W_tag_SF_LP = {"2016":1.086  , "2017":1.08   , "2018": 1. }
-
-H_tag_SF_HP = {"2016":1.014  , "2017":0.983  , "2018": 1. }
-H_tag_SF_LP = {"2016":1.086  , "2017":1.08   , "2018": 1. }
-
-W_tag_unc_HP = {"2016": 0.21 , "2017": 0.25 , "2018": 0.25  }
-W_tag_unc_LP = {"2016": 0.11, "2017": 0.13 , "2018": 0.13 }
-
-H_tag_unc_HP = {"2016": 0.21 , "2017": 0.25 , "2018": 0.25 }
-H_tag_unc_LP = {"2016": 0.11, "2017": 0.13 , "2018": 0.13  }
-
-
-vtag_pt_dependence = {'HP':'(1+0.06*log(MH/2/300))','LP':'(1+0.07*log(MH/2/300))'}
 
 
 def calculateWeight(e,category,uncertainty_var, uncertainty_num,variation):
@@ -200,11 +185,27 @@ if __name__=="__main__":
     ######### first apply the usual acceptance cuts to the trees ####################
     data ={}
     year = '2016'
+    ctx  = cuts.cuts("init_VV_VH.json",int(year),"random_dijetbins")
+    W_tag_SF_HP = ctx.HPSF_vtag
+    W_tag_SF_LP = ctx.LPSF_vtag
+
+    H_tag_SF_HP = ctx.HPSF_htag
+    H_tag_SF_LP = ctx.LPSF_htag
+
+    W_tag_unc_HP = ctx.W_tag_unc_HP
+    W_tag_unc_LP = ctx.W_tag_unc_LP
+
+    H_tag_unc_HP = ctx.H_tag_unc_HP
+    H_tag_unc_LP = ctx.H_tag_unc_LP
+
+    
     categories = ['VH_HPHP','VV_HPHP','VH_LPHP','VH_HPLP','VV_HPLP']
     tags = ['H_tag_HP','H_tag_LP','V_tag_HP','V_tag_LP']
     directory = "migrationunc/"
-    files = ["ZprimeToZh_2016.root",'ZprimeToWW_2016.root',"WprimeToWh_2016.root","BulkGravToWW_2016.root","BulkGravToZZ_2016.root"]
-    trees = {"ZprimeToZh_2016.root" : ["ZprimeToZhToZhadhbb_narrow_1000","ZprimeToZhToZhadhbb_narrow_1200","ZprimeToZhToZhadhbb_narrow_1600","ZprimeToZhToZhadhbb_narrow_1800","ZprimeToZhToZhadhbb_narrow_2500","ZprimeToZhToZhadhbb_narrow_3000","ZprimeToZhToZhadhbb_narrow_3500","ZprimeToZhToZhadhbb_narrow_4000","ZprimeToZhToZhadhbb_narrow_4500"],'ZprimeToWW_2016.root':["ZprimeToWW_narrow_1000", "ZprimeToWW_narrow_1200", "ZprimeToWW_narrow_1400", "ZprimeToWW_narrow_1600", "ZprimeToWW_narrow_1800","ZprimeToWW_narrow_2000", "ZprimeToWW_narrow_2500","ZprimeToWW_narrow_3000","ZprimeToWW_narrow_3500","ZprimeToWW_narrow_4000", "ZprimeToWW_narrow_4500","ZprimeToWW_narrow_5000", "ZprimeToWW_narrow_5500","ZprimeToWW_narrow_600" , "ZprimeToWW_narrow_6000","ZprimeToWW_narrow_6500", "ZprimeToWW_narrow_7000", "ZprimeToWW_narrow_7500", "ZprimeToWW_narrow_8000"],"WprimeToWZ_2016.root": ["WprimeToWZToWhadZhad_narrow_1000","WprimeToWZToWhadZhad_narrow_1400","WprimeToWZToWhadZhad_narrow_2500","WprimeToWZToWhadZhad_narrow_3000","WprimeToWZToWhadZhad_narrow_3500","WprimeToWZToWhadZhad_narrow_4000","WprimeToWZToWhadZhad_narrow_4500","WprimeToWZToWhadZhad_narrow_600" ,"WprimeToWZToWhadZhad_narrow_800"],"WprimeToWh_2016.root": ["WprimeToWhToWhadhbb_narrow_1200", "WprimeToWhToWhadhbb_narrow_1800", "WprimeToWhToWhadhbb_narrow_2000", "WprimeToWhToWhadhbb_narrow_2500", "WprimeToWhToWhadhbb_narrow_3000", "WprimeToWhToWhadhbb_narrow_3500", "WprimeToWhToWhadhbb_narrow_4000", "WprimeToWhToWhadhbb_narrow_4500", "WprimeToWhToWhadhbb_narrow_600" , "WprimeToWhToWhadhbb_narrow_800"], "BulkGravToWW_2016.root":["BulkGravToWW_narrow_1000","BulkGravToWW_narrow_1200","BulkGravToWW_narrow_1400","BulkGravToWW_narrow_1600","BulkGravToWW_narrow_1800","BulkGravToWW_narrow_2000","BulkGravToWW_narrow_2500","BulkGravToWW_narrow_3000","BulkGravToWW_narrow_3500","BulkGravToWW_narrow_4000","BulkGravToWW_narrow_4500","BulkGravToWW_narrow_600" ,"BulkGravToWW_narrow_800" ], "BulkGravToZZ_2016.root":["BulkGravToZZToZhadZhad_narrow_1000","BulkGravToZZToZhadZhad_narrow_1200","BulkGravToZZToZhadZhad_narrow_1400","BulkGravToZZToZhadZhad_narrow_1600","BulkGravToZZToZhadZhad_narrow_1800","BulkGravToZZToZhadZhad_narrow_2000","BulkGravToZZToZhadZhad_narrow_2500","BulkGravToZZToZhadZhad_narrow_3000","BulkGravToZZToZhadZhad_narrow_3500","BulkGravToZZToZhadZhad_narrow_4000","BulkGravToZZToZhadZhad_narrow_4500","BulkGravToZZToZhadZhad_narrow_500" ,"BulkGravToZZToZhadZhad_narrow_5000","BulkGravToZZToZhadZhad_narrow_5500","BulkGravToZZToZhadZhad_narrow_600" ,"BulkGravToZZToZhadZhad_narrow_6000","BulkGravToZZToZhadZhad_narrow_6500","BulkGravToZZToZhadZhad_narrow_7000","BulkGravToZZToZhadZhad_narrow_7500","BulkGravToZZToZhadZhad_narrow_800" ,"BulkGravToZZToZhadZhad_narrow_8000"]}
+    
+    
+    files = ["ZprimeToZh_2016.root",'ZprimeToWW_2016.root',"WprimeToWh_2016.root","BulkGravToWW_2016.root","BulkGravToZZ_2016.root","WprimeToWZ_2016.root"]
+    trees = {"ZprimeToZh_2016.root" : ["ZprimeToZhToZhadhbb_narrow_1000","ZprimeToZhToZhadhbb_narrow_1200","ZprimeToZhToZhadhbb_narrow_1600","ZprimeToZhToZhadhbb_narrow_1800","ZprimeToZhToZhadhbb_narrow_2500","ZprimeToZhToZhadhbb_narrow_3000","ZprimeToZhToZhadhbb_narrow_3500","ZprimeToZhToZhadhbb_narrow_4000","ZprimeToZhToZhadhbb_narrow_4500"],'ZprimeToWW_2016.root':["ZprimeToWW_narrow_1000", "ZprimeToWW_narrow_1200", "ZprimeToWW_narrow_1400", "ZprimeToWW_narrow_1600", "ZprimeToWW_narrow_1800","ZprimeToWW_narrow_2000", "ZprimeToWW_narrow_2500","ZprimeToWW_narrow_3000","ZprimeToWW_narrow_3500","ZprimeToWW_narrow_4000", "ZprimeToWW_narrow_4500","ZprimeToWW_narrow_5000", "ZprimeToWW_narrow_5500","ZprimeToWW_narrow_600" , "ZprimeToWW_narrow_6000","ZprimeToWW_narrow_6500", "ZprimeToWW_narrow_7000", "ZprimeToWW_narrow_7500", "ZprimeToWW_narrow_8000"],"WprimeToWZ_2016.root": ["WprimeToWZToWhadZhad_narrow_1000","WprimeToWZToWhadZhad_narrow_1400","WprimeToWZToWhadZhad_narrow_2500","WprimeToWZToWhadZhad_narrow_3000","WprimeToWZToWhadZhad_narrow_3500","WprimeToWZToWhadZhad_narrow_4000","WprimeToWZToWhadZhad_narrow_4500","WprimeToWZToWhadZhad_narrow_600" ,"WprimeToWZToWhadZhad_narrow_800"],"WprimeToWh_2016.root": ["WprimeToWhToWhadhbb_narrow_1200", "WprimeToWhToWhadhbb_narrow_1800", "WprimeToWhToWhadhbb_narrow_2000", "WprimeToWhToWhadhbb_narrow_2500", "WprimeToWhToWhadhbb_narrow_3000", "WprimeToWhToWhadhbb_narrow_3500", "WprimeToWhToWhadhbb_narrow_4000", "WprimeToWhToWhadhbb_narrow_4500"], "BulkGravToWW_2016.root":["BulkGravToWW_narrow_1000","BulkGravToWW_narrow_1200","BulkGravToWW_narrow_1400","BulkGravToWW_narrow_1600","BulkGravToWW_narrow_1800","BulkGravToWW_narrow_2000","BulkGravToWW_narrow_2500","BulkGravToWW_narrow_3000","BulkGravToWW_narrow_3500","BulkGravToWW_narrow_4000","BulkGravToWW_narrow_4500","BulkGravToWW_narrow_600" ,"BulkGravToWW_narrow_800" ], "BulkGravToZZ_2016.root":["BulkGravToZZToZhadZhad_narrow_1000","BulkGravToZZToZhadZhad_narrow_1200","BulkGravToZZToZhadZhad_narrow_1400","BulkGravToZZToZhadZhad_narrow_1600","BulkGravToZZToZhadZhad_narrow_1800","BulkGravToZZToZhadZhad_narrow_2000","BulkGravToZZToZhadZhad_narrow_2500","BulkGravToZZToZhadZhad_narrow_3000","BulkGravToZZToZhadZhad_narrow_3500","BulkGravToZZToZhadZhad_narrow_4000","BulkGravToZZToZhadZhad_narrow_4500","BulkGravToZZToZhadZhad_narrow_500" ,"BulkGravToZZToZhadZhad_narrow_5000","BulkGravToZZToZhadZhad_narrow_5500","BulkGravToZZToZhadZhad_narrow_600" ,"BulkGravToZZToZhadZhad_narrow_6000","BulkGravToZZToZhadZhad_narrow_6500","BulkGravToZZToZhadZhad_narrow_7000","BulkGravToZZToZhadZhad_narrow_7500","BulkGravToZZToZhadZhad_narrow_800" ,"BulkGravToZZToZhadZhad_narrow_8000"]}
     final={}
     
     for root_file in files:
@@ -219,14 +220,14 @@ if __name__=="__main__":
                 for cat in categories:
                     if tag.find('HP')!=-1:
                         if tag.find('V')!=-1:
-                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,W_tag_unc_HP[year],cat)
+                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,W_tag_unc_HP,cat)
                         if tag.find('H')!=-1:
-                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,H_tag_unc_HP[year],cat)
+                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,H_tag_unc_HP,cat)
                     if tag.find('LP')!=-1:
                         if tag.find('V')!=-1:
-                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,W_tag_unc_LP[year],cat)
+                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,W_tag_unc_LP,cat)
                         if tag.find('H')!=-1:
-                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,H_tag_unc_LP[year],cat)
+                            result[t.split('narrow_')[1]+'.'+cat] = calculateMigration(fulltree,tag,H_tag_unc_LP,cat)
             
         
             print '###################'+tag+'######################'
