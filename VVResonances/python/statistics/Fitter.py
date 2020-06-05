@@ -1215,7 +1215,7 @@ class Fitter(object):
 	
         if binning:
 	 self.w.data(data).plotOn(self.frame,ROOT.RooFit.Name( data ),ROOT.RooFit.Binning(binning),ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack))
-         if fr: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.Binning(binning), ROOT.RooFit.DrawOption("L"), R,ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
+         if fr: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.Binning(binning), ROOT.RooFit.DrawOption("L"), ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
 	 else: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.Binning(binning),ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack))#,ROOT.Normalization(ROOT.RooAbsReal.RelativeExpected,1.0))# ROOT.RooFit.Normalization(integral, ROOT.RooAbsReal.NumEvent))
 	else: 
 	 self.w.data(data).plotOn(self.frame,ROOT.RooFit.Name( data ),ROOT.RooFit.LineColor(ROOT.kBlack),ROOT.RooFit.LineStyle(1))
