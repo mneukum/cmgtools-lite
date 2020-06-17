@@ -1,6 +1,6 @@
 #bin/bash!
 models=("BGZZ" "WprimeWZ" "ZprimeWW" "BGWW"  "ZprimeZH" "WprimeWH")
-#models=("WprimeWH")
+models=("BGZZ")
 
 
 for model in ${models[@]}
@@ -30,7 +30,7 @@ cp results_2016/signalShapes_mJ_NP_2016_All_test.pdf /home/dschaefer/Documents/A
 python /work/dschaefer/DiBoson3D/makePseudoData.py --which sigonly
  models=("BulkGZZ"  "WprimeWZ" "ZprimeWW" "BulkGWW"  "ZprimeZH" "WprimeWH")
  category=( "VV_HPHP"  "VH_HPHP" "VH_HPLP" "VH_LPHP" "VV_HPLP")
-#models=("WprimeWH")
+ models=("BulkGZZ")
 
  for model in ${models[@]}
  do
@@ -49,7 +49,7 @@ mkdir postfitplots/
 
 
 models=("BulkGWW" "WprimeWZ" "ZprimeWW" "BulkGZZ" "ZprimeZH" "WprimeWH")
-#models=("WprimeWH")
+models=("BulkGZZ")
 
 
 for model in ${models[@]}

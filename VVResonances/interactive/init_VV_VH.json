@@ -131,11 +131,11 @@
     "WprimeWH":{"NP":{"fixPars":"n:7.0,alphaH:0.7","pol":"mean:spline,sigma:spline,alpha:spline,n:spline,alpha2:spline,n2:spline,meanH:spline,sigmaH:spline,alphaH:spline,nH:spline,alpha2H:spline,n2H:spline"}}},
     
     "fixParsSigMVV"  : {
-                "ZprimeZH":{"fixPars":"ALPHA2:2.42,N1:126.5", "pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline,corr_mean:pol1,corr_sigma:pol1"},
+                "ZprimeZH":{"fixPars":"ALPHA2:2.42,N1:126.5,N2:50", "pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline,corr_mean:pol1,corr_sigma:pol1"},
                "WprimeWH":{"fixPars":"ALPHA2:2.42,N1:126.5", "pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline,corr_mean:pol1,corr_sigma:pol1"},
                "WprimeWZ":{"fixPars":"N1:7,N2:4","pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline,corr_mean:pol1,corr_sigma:pol1"},
                "BulkGWW":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline"},
-               "BulkGZZ":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline"},
+               "BulkGZZ":{"fixPars":"1","pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline"},
                "ZprimeWW":{"fixPars":"N1:1.61364,N2:4.6012","pol":"MEAN:spline,SIGMA:spline,N1:spline,ALPHA1:spline,N2:spline,ALPHA2:spline"}}
     
 }    

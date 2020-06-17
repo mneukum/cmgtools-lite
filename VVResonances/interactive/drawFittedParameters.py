@@ -372,7 +372,7 @@ def doMVV(signals,titles,year):
         if var.find("SIGMA")!=-1:  datasHP[0].GetYaxis().SetRangeUser(0., 400.)
         if var.find("MEAN")!=-1:   datasHP[0].GetYaxis().SetRangeUser(700., 8000)
         if var.find("N1")!=-1:     datasHP[0].GetYaxis().SetRangeUser(0., 15.)
-        if var.find("N2")!=-1:     datasHP[0].GetYaxis().SetRangeUser(0., 10.)
+        if var.find("N2")!=-1:     datasHP[0].GetYaxis().SetRangeUser(0., 150.)
         datasHP[0].Draw("PA")
         print datasHP[0].Eval(1200.)
         c.Update()
