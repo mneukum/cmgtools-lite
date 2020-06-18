@@ -20,9 +20,13 @@ def returnString(func):
 def getBinning(binsMVV,minx,maxx,bins):
     l=[]
     if binsMVV=="":
+        print " do this"
+        print binsMVV
         for i in range(0,bins+1):
             l.append(minx + i* (maxx - minx)/bins)
     else:
+        print "dot that"
+        print binsMVV
         s = binsMVV.split(",")
         for w in s:
             l.append(int(w))
@@ -230,7 +234,11 @@ for mass in sorted(samples.keys()):
     fitter.w.var("MH").setVal(mass)
 
     extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(0.8*mass,1.1*mass)
-    binning= truncate(getBinning(options.binsMVV,options.minMX,options.maxMX,500),0.80*mass,1.2*mass)    
+    binning= truncate(getBinning(options.binsMVV,min(options.minMX,options.min),options.maxMX,500),0.80*mass,1.2*mass)    
+    
+    print "----------------------------------------"
+    print binning
+    print "-----------------------------------------------"
     
     histo = plotter.drawTH1Binned(options.mvv,options.cut+extra_extra_cut,"1",binning)
     fitter.importBinnedData(histo,['MVV'],'data')
@@ -275,7 +283,7 @@ for mass in sorted(samples.keys()):
              fitter.w.var(parVal[0]).setVal(float(parVal[1]))
              fitter.w.var(parVal[0]).setConstant(1)
 
-#    fitter.importBinnedData(histo,['MVV'],'data')
+    fitter.importBinnedData(histo,['MVV'],'data')
     fitter.fit('model','data',[ROOT.RooFit.SumW2Error(0),ROOT.RooFit.Save()])
     fitter.fit('model','data',[ROOT.RooFit.SumW2Error(0),ROOT.RooFit.Minos(1),ROOT.RooFit.Save()])
     
@@ -316,4 +324,6 @@ if testcorr==True:
 
 
 F.Close()
-            
+print "binsMVV"
+print options.binsMVV
+print "binsM"           

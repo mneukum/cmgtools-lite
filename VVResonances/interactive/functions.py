@@ -18,6 +18,7 @@ class AllFunctions():
   self.lumi = parameters[12]
   self.submitToBatch = parameters[13]
 
+
   self.printAllParameters()
   
  def makeSignalShapesMVV(self,filename,template,fixParsMVV,addcuts="1"):
@@ -26,7 +27,7 @@ class AllFunctions():
   ##the parameters to be fixed should be optimized
   rootFile=filename+"_MVV.root"
   fixPars = fixParsMVV["fixPars"]  
-  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"'.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts)
+  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"  '.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts,binsMVV=self.HCALbinsMVV)
   os.system(cmd)
   jsonFile=filename+"_MVV.json"
   cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixParsMVV["pol"])

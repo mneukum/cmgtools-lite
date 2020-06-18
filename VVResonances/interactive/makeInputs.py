@@ -165,12 +165,12 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
             #f.makeSignalShapesMVV("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,fixParsSigMVV[signal_inuse],"(jj_l1_softDrop_mass <= 105 && jj_l1_softDrop_mass > 85 && jj_l2_softDrop_mass <= 85 && jj_l2_softDrop_mass >= 65) || (jj_l2_softDrop_mass <= 105 && jj_l2_softDrop_mass > 85 && jj_l1_softDrop_mass <= 85 && jj_l1_softDrop_mass >= 65)")
             f.makeSignalShapesMVV("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,fixParsSigMVV[signal_inuse],"1")
         else:
-            f.makeSignalShapesMVV("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,fixParsSigMVV[signal_inuse.replace('VBF_','')])
+            f.makeSignalShapesMVV("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,fixParsSigMVV[signal_inuse.replace('VBF_','')],"1")
     
 
     if options.run.find("all")!=-1 or options.run.find("norm")!=-1:
         print "fit signal norm "
-        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag},"spline")
+        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag},"pol2")
         f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,ctx.cuts['nonres'],"sig")
         f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,ctx.cuts['nonres'],"sig")
 
@@ -219,9 +219,9 @@ if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:
 
 
 if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
-    f.fitTT   ("JJ_TT",TTemplate,1.,)
-    f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,cuts['nonres'],"1D",0,1.,1.)
-    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,cuts['nonres'],"nRes","") 
+    f.fitTT   ("JJ_%s_TTJets"%(period),TTemplate,1.,)
+    # f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,cuts['nonres'],"1D",0,1.,1.)
+    # f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,cuts['nonres'],"nRes","")
   
 if options.run.find("all")!=-1 or options.run.find("data")!=-1:
     print " Do data "
@@ -234,5 +234,9 @@ if options.run.find("all")!=-1 or options.run.find("pseudoVJETS")!=-1:
     print " Do pseudodata with vjets: DID YOU PRODUCE THE WORKSPACE BEFORE???"
     from modules.submitJobs import makePseudoDataVjets
     for p in categories: makePseudoDataVjets("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDVjets_%s.root"%p,lumi,"results_"+str(period)+"/workspace_JJ_BulkGWW_"+p+"_13TeV_"+str(period)+"_VjetsPrep.root",period,p)
+if options.run.find("all")!=-1 or options.run.find("pseudoALL")!=-1:
+    print " Do pseudodata. DID YOU PRODUCE THE WORKSPACE BEFORE???"
+    from modules.submitJobs import makePseudoDataVjetsTT
+    for p in categories: makePseudoDataVjetsTT("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PD_%s.root"%p,lumi,"workspace_JJ_ZprimeZH_%s_13TeV_%sZprimeZH.root"%(p,str(period)),period,p)
 
 print " ########## I did everything I could! ###### "
