@@ -20,9 +20,13 @@ def returnString(func):
 def getBinning(binsMVV,minx,maxx,bins):
     l=[]
     if binsMVV=="":
+        print " do this"
+        print binsMVV
         for i in range(0,bins+1):
             l.append(minx + i* (maxx - minx)/bins)
     else:
+        print "dot that"
+        print binsMVV
         s = binsMVV.split(",")
         for w in s:
             l.append(int(w))
@@ -89,7 +93,7 @@ def chooseBin(sample,b,binmidpoint):
         return b
     elif sample.find('WH')!=-1 or sample.find('Wh')!=-1:
         if b <= 55+2*binmidpoint and b > 65: b = 80
-        if b > 55+2*binmidpoint: b = 90
+        if b > 55+2*binmidpoint: b = 120
         return b
     
 def dodCBFits(h1,mass,prefix,fixpars):
@@ -127,14 +131,15 @@ parser.add_option("-t","--triggerweight",dest="triggerW",action="store_true",hel
 
 (options,args) = parser.parse_args()
 #define output dictionary
-print options.addcut
+
 
 samples={}
 graphs={'MEAN':ROOT.TGraphErrors(),'SIGMA':ROOT.TGraphErrors(),'ALPHA1':ROOT.TGraphErrors(),'N1':ROOT.TGraphErrors(),'ALPHA2':ROOT.TGraphErrors(),'N2':ROOT.TGraphErrors()}
 
 testcorr= False
 
-if options.sample.find("ZH")!=-1 or options.sample.find('Zh')!=-1 or options.sample.find("WZ")!=-1 or options.sample.find('WH')!=-1:
+
+if options.sample.find("ZH")!=-1 or options.sample.find('Zh')!=-1 or options.sample.find("WZ")!=-1 or options.sample.find('WH')!=-1 or options.sample.find('Wh')!=-1:
     testcorr = True
 print " ######### testcorr ",testcorr
 for filename in os.listdir(args[0]):
@@ -193,7 +198,7 @@ if (options.sample.find("H")!=-1 or options.sample.find("h")!=-1 or options.samp
     if samples[mass].find("WZ")!=-1:
         print 'mean for WZ signal' 
         graph_sum_mean = ROOT.TH2F("corr_mean","corr_mean",2,array("f",[76,86,94]),2,array("f",[76,86,94]))
-    elif options.sample.find("WH")!=-1 or samples[mass].find("Wh")!=-1:
+    elif samples[mass].find("WH")!=-1 or samples[mass].find("Wh")!=-1:
         print 'mean for WH signal'
         graph_sum_mean  = ROOT.TH2F("corr_mean","corr_mean",2,array("f",[65,105,145]),2,array("f",[65,105,145]))
     elif samples[mass].find("ZH")!=-1 or samples[mass].find("Zh")!=-1:
@@ -208,8 +213,10 @@ if (options.sample.find("H")!=-1 or options.sample.find("h")!=-1 or options.samp
         bins_all = [[5,15],[15,25]]
         binmidpoint = 15
     elif options.sample.find("WH")!=-1 or options.sample.find("Wh")!=-1:
+        print " set bins for WH"
         bins_all = [[5,15],[15,50]]
         binmidpoint = 15
+        print bins_all
     
 
 for mass in sorted(samples.keys()):
@@ -220,14 +227,19 @@ for mass in sorted(samples.keys()):
     if options.triggerW:
         plotter.addCorrectionFactor('jj_triggerWeight','tree')	
         print "Using triggerweight"
-       
+   
     fitter=Fitter(['MVV'])
     fitter.signalResonance('model',"MVV",mass,False)
    
     fitter.w.var("MH").setVal(mass)
 
     extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(0.8*mass,1.1*mass)
-    binning= truncate(getBinning(options.binsMVV,options.min,options.max,100),0.80*mass,1.2*mass)    
+    binning= truncate(getBinning(options.binsMVV,min(options.minMX,options.min),options.maxMX,500),0.80*mass,1.2*mass)    
+    
+    print "----------------------------------------"
+    print binning
+    print "-----------------------------------------------"
+    
     histo = plotter.drawTH1Binned(options.mvv,options.cut+extra_extra_cut,"1",binning)
     fitter.importBinnedData(histo,['MVV'],'data')
     ps = []
@@ -271,7 +283,7 @@ for mass in sorted(samples.keys()):
              fitter.w.var(parVal[0]).setVal(float(parVal[1]))
              fitter.w.var(parVal[0]).setConstant(1)
 
-#    fitter.importBinnedData(histo,['MVV'],'data')
+    fitter.importBinnedData(histo,['MVV'],'data')
     fitter.fit('model','data',[ROOT.RooFit.SumW2Error(0),ROOT.RooFit.Save()])
     fitter.fit('model','data',[ROOT.RooFit.SumW2Error(0),ROOT.RooFit.Minos(1),ROOT.RooFit.Save()])
     
@@ -302,8 +314,16 @@ if testcorr==True:
     print "sum sigma",  graph_sum_sigma
     graph_sum_sigma.Write()
     graph_sum_mean .Write()
+    tmp = graph_sum_mean
+    print "whats in mean?"
+    for x in range(1,tmp.GetXaxis().GetNbins()+1):
+        for y in range(1,tmp.GetXaxis().GetNbins()+1):
+            print x
+            print y
+            print tmp.GetBinContent(x,y)
 
 
 F.Close()
-
-            
+print "binsMVV"
+print options.binsMVV
+print "binsM"           

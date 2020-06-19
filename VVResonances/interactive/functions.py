@@ -18,6 +18,7 @@ class AllFunctions():
   self.lumi = parameters[12]
   self.submitToBatch = parameters[13]
 
+
   self.printAllParameters()
   
  def makeSignalShapesMVV(self,filename,template,fixParsMVV,addcuts="1"):
@@ -26,7 +27,7 @@ class AllFunctions():
   ##the parameters to be fixed should be optimized
   rootFile=filename+"_MVV.root"
   fixPars = fixParsMVV["fixPars"]  
-  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"'.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts)
+  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"  '.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts,binsMVV=self.HCALbinsMVV)
   os.system(cmd)
   jsonFile=filename+"_MVV.json"
   cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixParsMVV["pol"])
@@ -57,7 +58,7 @@ class AllFunctions():
     cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixPars["NP"]["pol"])
     os.system(cmd)
 
- def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0}):
+ def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0},functype="pol5"):
  
   print "using the following scalfactors:" ,sfP
   
@@ -65,7 +66,7 @@ class AllFunctions():
    if 'VBF' in c: cut = "*".join([self.cuts[c.replace('VBF_','')],self.cuts['common_VBF'],self.cuts['acceptance'],str(sfP[c.replace('VBF_','')])])
    else: cut = "*".join([self.cuts[c],self.cuts['common_VV'],self.cuts['acceptance'],str(sfP[c])])
    yieldFile=filename+"_"+c+"_yield"
-   fnc = "pol7"
+   fnc = functype
    cmd='vvMakeSignalYields.py -s {template} -c "{cut}" -o {output} -V "jj_LV_mass" -m {minMVV} -M {maxMVV} -f {fnc} -b {BR} --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template, cut=cut, output=yieldFile,minMVV=self.minMVV,maxMVV=self.maxMVV,fnc=fnc,BR=branchingFraction,minMX=self.minMX,maxMX=self.maxMX,samples=self.samples)
    os.system(cmd)
 

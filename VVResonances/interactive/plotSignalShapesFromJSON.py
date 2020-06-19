@@ -2,6 +2,7 @@
 import ROOT
 import json
 import math
+import types
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
 from time import sleep
 import optparse, sys
@@ -68,117 +69,53 @@ def getCanvasPaper(cname):
 
 	
 def getMVVPdf(w,j,MH,postfix=""):
-
-        var = w.var(options.var)
-
-        pdfName 	= "signal_%d%s" %(MH,postfix)
-        Jmean 		= eval(j['MEAN'])
-        Jsigma		= eval(j['SIGMA'])
-        Jalpha1     = eval(j['ALPHA1'])
-        Jalpha2     = eval(j['ALPHA2'])
-        Jn1 		= eval(j['N1'])
-        Jn2 		= eval(j['N2'])
-        
-        mean        = ROOT.RooRealVar("mean_%d%s"%(MH,postfix),"mean_%d%s"%(MH,postfix),Jmean)
-        sigma       = ROOT.RooRealVar("sigma_%d%s"%(MH,postfix),"sigma_%d%s"%(MH,postfix),Jsigma)        
-        alpha1      = ROOT.RooRealVar("alpha1_%d%s"%(MH,postfix),"alpha1_%d%s"%(MH,postfix),Jalpha1)
-        alpha2      = ROOT.RooRealVar("alpha2_%d%s"%(MH,postfix),"alpha2_%d%s"%(MH,postfix),Jalpha2)
-        n1          = ROOT.RooRealVar("n1_%d%s"%(MH,postfix),"n1_%d%s"%(MH,postfix),Jn1)
-        n2          = ROOT.RooRealVar("n2_%d%s"%(MH,postfix),"n2_%d%s"%(MH,postfix),Jn2)
-        
-
-        alpha1.setConstant(ROOT.kTRUE)
-        alpha2.setConstant(ROOT.kTRUE)
-        n2.setConstant(ROOT.kTRUE)
-        n1.setConstant(ROOT.kTRUE)
-        mean.setConstant(ROOT.kTRUE)
-        sigma.setConstant(ROOT.kTRUE)
-                
-        # gauss     = ROOT.RooGaussian("gauss_%d%s"%(MH,postfix), "gauss_%d%s"%(MH,postfix), var, mean, gsigma)
-        # cb        = ROOT.RooCBShape("cb_%d%s"%(MH,postfix), "cb_%d%s"%(MH,postfix),var, mean, sigma, alpha, sign)
-        # function = ROOT.RooAddPdf(pdfName, pdfName,gauss, cb, sigfrac)
-        function = ROOT.RooDoubleCB(pdfName, pdfName,var, mean,sigma,alpha1,n1,alpha2,n2)
-        getattr(w,'import')(function,ROOT.RooFit.Rename(pdfName))
+  getPdf(w,j,MH,postfix,None,True)
 
 def getMJPdf(w,j,MH,postfix="",jH=None):
-        
+  getPdf(w,j,MH,postfix,jH,False)
+
+def getPdf(w,j,MH,postfix="",jH=None,isMVV=False):
         var = w.var(options.var)
-	if postfix.find("H")==-1:
-            pdfName 	= "signal_%d%s" %(MH,postfix)
-            Jmean 		= eval(j['mean'])
-            Jsigma		= eval(j['sigma'])
-            Jalpha 		= eval(j['alpha'])
-            Jalpha2 	= eval(j['alpha2'])
-            Jn 		= eval(j['n'])
-            Jn2 		= eval(j['n2'])
-
-            mean        = ROOT.RooRealVar("mean_%d%s"%(MH,postfix),"mean_%d%s"%(MH,postfix),Jmean)
-            sigma       = ROOT.RooRealVar("sigma_%d%s"%(MH,postfix),"sigma_%d%s"%(MH,postfix),Jsigma)
-            alpha       = ROOT.RooRealVar("alpha_%d%s"%(MH,postfix),"alpha_%d%s"%(MH,postfix),Jalpha)
-            alpha2      = ROOT.RooRealVar("alpha2_%d%s"%(MH,postfix),"alpha2_%d%s"%(MH,postfix),Jalpha2)
-            sign        = ROOT.RooRealVar("sign_%d%s"%(MH,postfix),"sign_%d%s"%(MH,postfix),Jn)
-            sign2        = ROOT.RooRealVar("sign2_%d%s"%(MH,postfix),"sign2_%d%s"%(MH,postfix),Jn2)        
-
-            alpha.setConstant(ROOT.kTRUE)
-            sign.setConstant(ROOT.kTRUE)
-            alpha2.setConstant(ROOT.kTRUE)
-            sign2.setConstant(ROOT.kTRUE)
-            mean.setConstant(ROOT.kTRUE)
-            sigma.setConstant(ROOT.kTRUE)
-            
-            function = ROOT.RooDoubleCB(pdfName, pdfName, var, mean, sigma, alpha, sign,  alpha2, sign2)  
-            getattr(w,'import')(function,ROOT.RooFit.Rename(pdfName))
-        else:
-            if postfix =="H": postfix = ""
-            pdfName 	= "signal_%d%s" %(MH,postfix)
-            Jmean 		= eval(j['mean'])
-            Jsigma		= eval(j['sigma'])
-            Jalpha 		= eval(j['alpha'])
-            Jalpha2 	= eval(j['alpha2'])
-            Jn 		= eval(j['n'])
-            Jn2 		= eval(j['n2'])
-            
-            JmeanH 		= eval(jH['meanH'])
-            JsigmaH		= eval(jH['sigmaH'])
-            JalphaH 		= eval(jH['alphaH'])
-            Jalpha2H 	= eval(jH['alpha2H'])
-            JnH 		= eval(jH['nH'])
-            Jn2H 		= eval(jH['n2H'])
-            
-            
-
-            mean        = ROOT.RooRealVar("mean_%d%s"%(MH,postfix),"mean_%d%s"%(MH,postfix),Jmean)
-            sigma       = ROOT.RooRealVar("sigma_%d%s"%(MH,postfix),"sigma_%d%s"%(MH,postfix),Jsigma)
-            alpha       = ROOT.RooRealVar("alpha_%d%s"%(MH,postfix),"alpha_%d%s"%(MH,postfix),Jalpha)
-            alpha2      = ROOT.RooRealVar("alpha2_%d%s"%(MH,postfix),"alpha2_%d%s"%(MH,postfix),Jalpha2)
-            sign        = ROOT.RooRealVar("sign_%d%s"%(MH,postfix),"sign_%d%s"%(MH,postfix),Jn)
-            sign2        = ROOT.RooRealVar("sign2_%d%s"%(MH,postfix),"sign2_%d%s"%(MH,postfix),Jn2)
-            
-            meanH        = ROOT.RooRealVar("Hmean_%d%s"%(MH,postfix),"Hmean_%d%s"%(MH,postfix),JmeanH)
-            sigmaH       = ROOT.RooRealVar("Hsigma_%d%s"%(MH,postfix),"Hsigma_%d%s"%(MH,postfix),JsigmaH)
-            alphaH       = ROOT.RooRealVar("Halpha_%d%s"%(MH,postfix),"Halpha_%d%s"%(MH,postfix),JalphaH)
-            alpha2H      = ROOT.RooRealVar("Halpha2_%d%s"%(MH,postfix),"Halpha2_%d%s"%(MH,postfix),Jalpha2H)
-            signH        = ROOT.RooRealVar("Hsign_%d%s"%(MH,postfix),"Hsign_%d%s"%(MH,postfix),JnH)
-            sign2H        = ROOT.RooRealVar("Hsign2_%d%s"%(MH,postfix),"Hsign2_%d%s"%(MH,postfix),Jn2H)
-            
-            ratio        = ROOT.RooRealVar("ratio_%d%s"%(MH,postfix),"ratio_%d%s"%(MH,postfix),0.5)
-
-            alpha.setConstant(ROOT.kTRUE)
-            sign.setConstant(ROOT.kTRUE)
-            alpha2.setConstant(ROOT.kTRUE)
-            sign2.setConstant(ROOT.kTRUE)
-            mean.setConstant(ROOT.kTRUE)
-            sigma.setConstant(ROOT.kTRUE)
-            
-            alphaH.setConstant(ROOT.kTRUE)
-            signH.setConstant(ROOT.kTRUE)
-            alpha2H.setConstant(ROOT.kTRUE)
-            sign2H.setConstant(ROOT.kTRUE)
-            meanH.setConstant(ROOT.kTRUE)
-            sigmaH.setConstant(ROOT.kTRUE)
-            
-            function1 = ROOT.RooDoubleCB(pdfName+"1", pdfName+"1", var, mean, sigma, alpha, sign,  alpha2, sign2) 
-            function2 = ROOT.RooDoubleCB(pdfName+"2", pdfName+"2", var, meanH, sigmaH, alphaH, signH,  alpha2H, sign2H)
+        pdfName 	= "signal_%d%s" %(MH,postfix)
+        variables = []
+        ratio        = ROOT.RooRealVar("ratio_%d%s"%(MH,postfix),"ratio_%d%s"%(MH,postfix),0.5)   
+        if postfix.find("H")==-1:
+            names = ["mean","sigma","alpha","n","alpha2","n2"]
+        else: names = ["mean","sigma","alpha","n","alpha2","n2","meanH","sigmaH","alphaH","nH","alpha2H","n2H"]
+        if isMVV==True:
+          print "mVV shape"
+          names = ["MEAN","SIGMA","ALPHA1","N1","ALPHA2","N2"]
+        for n in names:
+          if n.find("H")==-1 or n.find("ALPHA")!=-1:
+            if isinstance(j[n],list) == False: 
+              variables.append(ROOT.RooRealVar(n+"_"+str(MH)+postfix,n+"_"+str(MH)+postfix,eval(j[n])))
+            else:
+              gtmp = ROOT.TGraph()
+                       
+              for index in range(0,len(j[n])):
+                gtmp.SetPoint(index+1,j[n][index][0],j[n][index][1])
+              
+              tmp = ROOT.TSpline3("tmp_spline",gtmp)
+              variables.append(ROOT.RooRealVar(n+"_"+str(MH)+postfix,n+"_"+str(MH)+postfix,tmp.Eval(MH)))
+             
+          else:
+            if isinstance(j[n],list) == False:
+              variables.append(ROOT.RooRealVar(n+"_"+str(MH)+postfix,n+"_"+str(MH)+postfix,eval(jH[n])))
+            else:
+              gtmp = ROOT.TGraph()
+                       
+              for index in range(0,len(jH[n])):
+                gtmp.SetPoint(index+1,jH[n][index][0],jH[n][index][1])
+              
+              tmp = ROOT.TSpline3("tmp_spline",gtmp)
+              variables.append(ROOT.RooRealVar(n+"_"+str(MH)+postfix,n+"_"+str(MH)+postfix,tmp.Eval(MH)))
+            variables[-1].setConstant(ROOT.kTRUE)
+        if jH==None:
+          function = ROOT.RooDoubleCB(pdfName, pdfName, var, variables[0], variables[1], variables[2], variables[3], variables[4], variables[5])  
+          getattr(w,'import')(function,ROOT.RooFit.Rename(pdfName))
+        else:  
+            function1 = ROOT.RooDoubleCB(pdfName+"1", pdfName+"1", var, variables[0], variables[1],variables[2],variables[3],variables[4], variables[5]) 
+            function2 = ROOT.RooDoubleCB(pdfName+"2", pdfName+"2", var, variables[6], variables[7], variables[8], variables[9],variables[10], variables[11])
             function =  ROOT.RooAddPdf(pdfName,pdfName,function1,function2,ratio)
             getattr(w,'import')(function,ROOT.RooFit.Rename(pdfName))
             
@@ -210,11 +147,14 @@ varBins = {'mVV':'[37,1000,5500]','mJ':'[80,55,215]'}
 #w.factory(options.var+varBins[options.var])
 #w.var(options.var).SetTitle(varName[options.var])
 colors= []
-colors.append(["#000080","#0000CD","#0000FF","#3D59AB","#4169E1","#4876FF","#6495ED","#1E90FF","#63B8FF","#87CEFA","#C6E2FF"]*3)   
-colors.append(["#006400","#308014","#228B22","#32CD32","#00CD00","#00EE00","#00FF00","#7CCD7C","#7CFC00","#ADFF2F","#C0FF3E"]*3)   
-colors.append(["#CD8500","#CD950C","#EE9A00","#EEAD0E","#FFA500","#FFB90F","#FFC125","#EEC900","#FFD700","#FFEC8B","#FFF68F"]*3) 
-colors.append(["#8B2500","#CD3700","#EE4000","#FF4500","#CD4F39","#EE5C42","#EE6A50","#FF7256","#FA8072","#FFA07A","#EEB4B4"]*3)
-colors.append(["#EE82EE","#FF00FF","#D02090","#C71585","#B03060 ","#DB7093","#FFB6C1","#FFC0CB"]*3)
+colors.append(["#000080","#0000CD","#0000FF","#3D59AB","#4169E1","#4876FF","#6495ED","#1E90FF","#63B8FF","#87CEFA","#C6E2FF"]*4)   
+colors.append(["#006400","#308014","#228B22","#32CD32","#00CD00","#00EE00","#00FF00","#7CCD7C","#7CFC00","#ADFF2F","#C0FF3E"]*4)   
+colors.append(["#CD8500","#CD950C","#EE9A00","#EEAD0E","#FFA500","#FFB90F","#FFC125","#EEC900","#FFD700","#FFEC8B","#FFF68F"]*4) 
+colors.append(["#8B2500","#CD3700","#EE4000","#FF4500","#CD4F39","#EE5C42","#EE6A50","#FF7256","#FA8072","#FFA07A","#EEB4B4"]*4)
+colors.append(["#EE82EE","#FF00FF","#D02090","#C71585","#B03060 ","#DB7093","#FFB6C1","#FFC0CB"]*4)
+colors.append(["#D2B48C","#FFA54F","#EE9A49","#CD853F"]*4)
+
+
 
 def doSingle():
     w=ROOT.RooWorkspace("w","w")
@@ -288,7 +228,7 @@ def doAll(category,jsons,legs):
 
     c1.Draw()
     if options.var == 'mVV':
-        c1.Divide(1,5,0.0,0.0)
+        c1.Divide(1,6,0.0,0.0)
     leg = []
     frame = []  
     #frame.SetTitle("")
@@ -308,34 +248,40 @@ def doAll(category,jsons,legs):
             frame[-1].SetAxisRange(55,150)
         frame[-1].SetTitle("")
         name = f.split("_")[1]
+        if f.find("H")!=-1 : name = f.split("_")[2]
         with open(options.indir+f) as jsonFile:
           j = json.load(jsonFile)
           for i, MH in enumerate(massPoints):  # mind that MH is evaluated below
             if options.var == 'mVV': getMVVPdf(w,j,MH,name)
             else: 
-                if f.find("ZH")==-1:
+                if f.find("ZH")==-1 and f.find("WH")==-1:
                     print "no H boson in sample "
                     getMJPdf(w,j,MH,name)
-                if f.find("Vjet")!=-1:
+                elif f.find("Vjet")!=-1:
                     with open(options.indir+f.replace("Vjet","Hjet")) as jsonFileH:
                         jH = json.load(jsonFileH)
                     getMJPdf(j,MH,name,jH)
-                if f.find("Hjet")!=-1:
+                elif f.find("Hjet")!=-1:
                     with open(options.indir+f.replace("Hjet","Vjet")) as jsonFileV:
                         jV = json.load(jsonFileV)
                     getMJPdf(w,jV,MH,name,j)
             w.pdf('signal_%d%s'%(MH,name)).plotOn(frame[-1], ROOT.RooFit.LineColor(ROOT.TColor.GetColor(colors[ii][i])),ROOT.RooFit.Name(str(MH)+name))#,ROOT.RooFit.Range(MH*0.8,1.2*MH))#ROOT.RooFit.Normalization(1, ROOT.RooAbsReal.RelativeExpected),
       
+   
     if options.var == 'mVV': 
         for ii,f in enumerate(jsons):
             print len(jsons)
             print ii
             print "json "+str(jsons[len(jsons)-ii-1])
             name = jsons[ii].split("_")[1]
+            if jsons[len(jsons)-ii-1].find("jet")!=-1 : name = jsons[len(jsons)-ii-1].split("_")[2]
             leg[ii].AddEntry(frame[ii].findObject(str(2000)+name), legs[ii], "L")
     else:
         for ii,f in enumerate(jsons):
             name = jsons[len(jsons)-ii-1].split("_")[1]
+            if jsons[len(jsons)-ii-1].find("jet")!=-1 : name = jsons[len(jsons)-ii-1].split("_")[2]
+            print name
+            print jsons[len(jsons)-ii-1]
             leg[-1].AddEntry(frame[0].findObject(str(2000)+name),legs[len(jsons)-ii-1],"L")
 
     for i in range(1,len(frame)+1):
@@ -409,9 +355,9 @@ def doAll(category,jsons,legs):
       
 if __name__ == '__main__':
     #doSingle()
-    legs = ["G_{bulk} #rightarrow ZZ","W' #rightarrow WZ","G_{bulk} #rightarrow WW","Z'#rightarrow WW","Z' #rightarrow ZH"]
-    signals = ["BulkGZZ","WprimeWZ","BulkGWW","ZprimeWW","ZprimeZH"]
-
+    legs = ["G_{bulk} #rightarrow ZZ","W' #rightarrow WZ","G_{bulk} #rightarrow WW","Z'#rightarrow WW","Z' #rightarrow ZH","W' #rightarrow WH"]
+    signals = ["BulkGZZ","WprimeWZ","BulkGWW","ZprimeWW","ZprimeZH","WprimeWH"]
+    categories = options.category.split(',')
     for category in categories:
       jsons=[]
       for s in signals:

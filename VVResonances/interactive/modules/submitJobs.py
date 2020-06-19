@@ -24,18 +24,36 @@ def getBinning(binsMVV):
     return l
 
 useCondorBatch = True
+runinKA = False
 
 def makeSubmitFileCondor(exe,jobname,jobflavour):
     print "make options file for condor job submission "
-    submitfile = open("submit.sub","w")
-    submitfile.write("executable  = "+exe+"\n")
-    submitfile.write("arguments             = $(ClusterID) $(ProcId)\n")
-    submitfile.write("output                = "+jobname+".$(ClusterId).$(ProcId).out\n")
-    submitfile.write("error                 = "+jobname+".$(ClusterId).$(ProcId).err\n")
-    submitfile.write("log                   = "+jobname+".$(ClusterId).log\n")
-    submitfile.write('+JobFlavour           = "'+jobflavour+'"\n')
-    submitfile.write("queue")
-    submitfile.close()
+    if runinKA==False:
+        submitfile = open("submit.sub","w")
+        submitfile.write("executable  = "+exe+"\n")
+        submitfile.write("arguments             = $(ClusterID) $(ProcId)\n")
+        submitfile.write("output                = "+jobname+".$(ClusterId).$(ProcId).out\n")
+        submitfile.write("error                 = "+jobname+".$(ClusterId).$(ProcId).err\n")
+        submitfile.write("log                   = "+jobname+".$(ClusterId).log\n")
+        submitfile.write('+JobFlavour           = "'+jobflavour+'"\n')
+        submitfile.write("queue")
+        submitfile.close()
+    else:
+        submitfile = open("submit.sub","w")
+        submitfile.write("universe = vanilla\n")
+        submitfile.write("executable  = "+exe+"\n")
+        submitfile.write("arguments             = $(ClusterID) $(ProcId)\n")
+        submitfile.write("output                = "+jobname+".$(ClusterId).$(ProcId).out\n")
+        submitfile.write("error                 = "+jobname+".$(ClusterId).$(ProcId).err\n")
+        submitfile.write("log                   = "+jobname+".$(ClusterId).log\n")
+        submitfile.write('transfer_output_files = ""\n')
+        submitfile.write("getenv = True\n")
+        submitfile.write("Requirements =  ( (TARGET.ProvidesCPU) && (TARGET.ProvidesEkpResources) )\n") 
+        submitfile.write("+RequestWalltime = 1800\n")
+        submitfile.write("RequestMemory = 2500\n")
+        submitfile.write("accounting_group = cms.top\n")
+        submitfile.write("queue")
+        submitfile.close()
     
 def waitForBatchJobs( jobname, remainingjobs, listOfJobs, userName, timeCheck="30"):
     if listOfJobs-remainingjobs < listOfJobs:
@@ -75,9 +93,12 @@ def submitJobs(minEv,maxEv,cmd,OutputFileNames,queue,jobname,path):
           fout.write("echo\n")
           fout.write("echo 'START---------------'\n")
           fout.write("echo 'WORKDIR ' ${PWD}\n")
-          fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          if runinKA==False:
+            fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          else: fout.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
+          if runinKA==True: fout.write("mkdir -p /tmp/${USER}/\n")
           fout.write(cmd+" -o res"+jobname+"/"+OutputFileNames+"_"+str(j+1)+"_"+k+" -s "+k+" -e "+str(minEv[k][j])+" -E "+str(maxEv[k][j])+"\n")
           fout.write("echo 'STOP---------------'\n")
           fout.write("echo\n")
@@ -177,9 +198,12 @@ def Make2DDetectorParam(rootFile,template,cut,samples,jobname="DetPar",bins="200
           fout.write("echo\n")
           fout.write("echo 'START---------------'\n")
           fout.write("echo 'WORKDIR ' ${PWD}\n")
-          fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          if runinKA==False:
+            fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          else: fout.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
+          if runinKA==True: fout.write("mkdir -p /tmp/${USER}/\n")
           fout.write(cmd+" -o "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" -s "+files[x-1]+"\n")
           fout.write("echo 'STOP---------------'\n")
           fout.write("echo\n")
@@ -1379,9 +1403,12 @@ def makeData(template,cut,rootFile,binsMVV,binsMJ,minMVV,maxMVV,minMJ,maxMJ,fact
           fout.write("echo\n")
           fout.write("echo 'START---------------'\n")
           fout.write("echo 'WORKDIR ' ${PWD}\n")
-          fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          if runinKA==False:
+            fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+          else: fout.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
           fout.write("cd "+str(path)+"\n")
           fout.write("cmsenv\n")
+          if runinKA==True: fout.write("mkdir -p /tmp/${USER}/\n")
           fout.write(cmd+" -o "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" -s "+files[x-1]+"\n")
           fout.write("echo 'STOP---------------'\n")
           fout.write("echo\n")
@@ -1571,9 +1598,12 @@ def submitCPs(samples,template,wait,jobname="CPs",rootFile="controlplots_2017.ro
         fout.write("echo\n")
         fout.write("echo 'START---------------'\n")
         fout.write("echo 'WORKDIR ' ${PWD}\n")
-        fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+        if runinKA==False:
+            fout.write("source /afs/cern.ch/cms/cmsset_default.sh\n")
+        else: fout.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
         fout.write("cd "+str(path)+"\n")
         fout.write("cmsenv\n")
+        if runinKA==True: fout.write("mkdir -p /tmp/${USER}/\n")
         fout.write(cmd+" "+files[x-1]+" "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" "+samples+"\n")
         print "EXECUTING: ",cmd+" "+files[x-1]+" "+path+"/res"+jobname+"/"+OutputFileNames+"_"+files[x-1]+" "+samples+"\n"
         fout.write("echo 'STOP---------------'\n")
