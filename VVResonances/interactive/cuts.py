@@ -167,7 +167,7 @@ class cuts():
             self.catHtag['NP1'] =  '('+data["tagging_variables_and_wp"]["varl1Htag"] +'<' +data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) + ')' 
             self.catHtag['NP2'] =  '('+data["tagging_variables_and_wp"]["varl2Htag"] +'<' +data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) + ')' 
             
-            selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
+            selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","resTT_W","nonresTT","resTnonresT","resWnonresT","resTresW","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
             for sel in selections:
                 self.cuts[sel] = data["selection_cuts"][sel]
                 self.cuts[sel] = self.cuts[sel].replace("minMJ",str(self.minMJ))
@@ -249,24 +249,26 @@ class cuts():
 
 if __name__ == "__main__":
     c = cuts("init_VV_VH.json",2016,"dijetbins_random")
-    print c.HPSF_vtag
-    print c.LPSF_vtag
-    print c.minMJ
-    print c.catVtag['LP1']
+    #print c.HPSF_vtag
+    #print c.LPSF_vtag
+    #print c.minMJ
+    #print c.catVtag['LP1']
     
-    print c.catHtag['LP1']
-    print c.maxMX
-    print c.HCALbinsMVV 
-    print c.HCALbinsMVVSignal 
+    #print c.catHtag['LP1']
+    #print c.maxMX
+    #print c.HCALbinsMVV 
+    #print c.HCALbinsMVVSignal 
     
-    print c.cuts["VV_HPHP"]
+    #print c.cuts["VV_HPHP"]
     
-    selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
+    #selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
     
-    for sel in selections:
-        print c. cuts[sel]
+    #for sel in selections:
+        #print c. cuts[sel]
     
     
-    print c.fixParsSig["ZprimeWW"]['NP']
+    #print c.fixParsSig["ZprimeWW"]['NP']
 
-    print c.minMX
+    #print c.minMX
+    print c.binsMVV
+    print c.HCALbinsMVV
