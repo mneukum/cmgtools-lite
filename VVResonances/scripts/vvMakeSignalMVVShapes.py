@@ -30,6 +30,7 @@ def getBinning(binsMVV,minx,maxx,bins):
         s = binsMVV.split(",")
         for w in s:
             l.append(int(w))
+    print " binning not truncated  ",l
     return l
 
 def truncate(binning,mmin,mmax):
@@ -233,8 +234,16 @@ for mass in sorted(samples.keys()):
    
     fitter.w.var("MH").setVal(mass)
 
-    extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(0.8*mass,1.1*mass)
-    binning= truncate(getBinning(options.binsMVV,min(options.minMX,options.min),options.maxMX,500),0.80*mass,1.2*mass)    
+    fmax=1.5
+    fmin=0.80
+    extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(fmin*mass,fmax*mass)
+
+    setmaxMX= options.maxMX*fmax
+    setminMX=min(options.minMX,options.min)
+    print " range will be ",setminMX," - ",setmaxMX
+    print "options.binsMVV ",options.binsMVV
+    ndiv=1000
+    binning= truncate(getBinning(options.binsMVV,setminMX,setmaxMX,ndiv),fmin*mass,1.2*mass)    
     
     print "----------------------------------------"
     print binning
