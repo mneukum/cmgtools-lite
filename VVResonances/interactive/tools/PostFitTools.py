@@ -12,7 +12,7 @@ ROOT.gROOT.ProcessLine(".x tdrstyle.cc");
 class Postfitplotter():
     logfile = ""
     options = None
-    colors = [ROOT.kGray+2,ROOT.kRed,ROOT.kBlue,ROOT.kMagenta,210,210,ROOT.kMagenta,ROOT.kOrange,ROOT.kOrange,ROOT.kViolet,ROOT.kViolet]
+    colors = [ROOT.kGray+2,ROOT.kRed,ROOT.kBlue,ROOT.kMagenta,210,ROOT.kOrange,ROOT.kViolet,ROOT.kViolet]
     signalName = "BulkG"
     def __init__(self,options,logfile,signalName):
         print "initialize plotter"
@@ -379,10 +379,10 @@ class Postfitplotter():
             histos[i].SetLineColor(self.colors[i])
             histos[i].Draw("histsame")
             name = histos[i].GetName().split("_")
-            if len(name)>2:
-                leg.AddEntry(histos[i],name[1],"l")
-            else:
-                leg.AddEntry(histos[i],name[0],"l")
+            #if len(name)>2:
+                #leg.AddEntry(histos[i],name[1],"l")
+            #else:
+                #leg.AddEntry(histos[i],name[0],"l")
         hdata.SetMarkerStyle(20)
         hdata.SetMarkerColor(ROOT.kBlack)
         hdata.SetLineColor(ROOT.kBlack)
@@ -444,6 +444,9 @@ class Postfitplotter():
             leg.AddEntry(histos[2],"Z+jets","l")
         if len(histos)>2:
             if self.options.addTop: leg.AddEntry(histos[3],"t#bar{t}","l")
+            if self.options.addTop: leg.AddEntry(histos[4],"res Top","l")
+            if self.options.addTop: leg.AddEntry(histos[5],"res W","l")
+            if self.options.addTop: leg.AddEntry(histos[6],"nonres Top","l")
         
         text = "G_{bulk} (%.1f TeV) #rightarrow WW (#times %i)"%(self.options.signalMass/1000.,scaling)
         if (self.options.signalMass%1000.)==0:
@@ -619,6 +622,9 @@ class Projection():
     htot_Wres = None
     htot_Zres = None
     htot_TTJets = None
+    htot_TTJetsTop = None
+    htot_TTJetsW = None
+    htot_TTJetsNonRes =None
     htot = None
     doFit = False
     axis = ""
@@ -810,6 +816,9 @@ class Projection():
         self.htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(self.Binslowedge)-1,self.Binslowedge)
         self.htot_Zres = ROOT.TH1F("htot_Zres","htot_Zres",len(self.Binslowedge)-1,self.Binslowedge)
         self.htot_TTJets = ROOT.TH1F("htot_TTJets","htot_TTJets",len(self.Binslowedge)-1,self.Binslowedge)
+        self.htot_TTJetsTop = ROOT.TH1F("htot_TTJetsTop","htot_TTJetsTop",len(self.Binslowedge)-1,self.Binslowedge)
+        self.htot_TTJetsW = ROOT.TH1F("htot_TTJetsW","htot_TTJetsW",len(self.Binslowedge)-1,self.Binslowedge)
+        self.htot_TTJetsNonRes = ROOT.TH1F("htot_TTJetsNonRes","htot_TTJetsNonRes",len(self.Binslowedge)-1,self.Binslowedge)
          
         for p in pdfs:
             self.h.append( ROOT.TH1F("h_"+p.GetName(),"h_"+p.GetName(),len(self.Binslowedge)-1,self.Binslowedge))
@@ -860,9 +869,9 @@ class Projection():
                 if "nonRes" in str(pdfs[i].GetName()) : self.htot_nonres.Fill(iv,self.lv[i][iv]); 
                 elif "Wjets" in str(pdfs[i].GetName()) : self.htot_Wres.Fill(iv,self.lv[i][iv]); 
                 elif "Zjets" in str(pdfs[i].GetName()) : self.htot_Zres.Fill(iv,self.lv[i][iv]); 
-                elif "TTJetsTop" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv])
-                elif "TTJetsW" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv])
-                elif "TTJetsNonRes" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv])
+                elif "TTJetsTop" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv]); self.htot_TTJetsTop.Fill(iv,self.lv[i][iv])
+                elif "TTJetsW" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv]); self.htot_TTJetsW.Fill(iv,self.lv[i][iv])
+                elif "TTJetsNonRes" in str(pdfs[i].GetName()): self.htot_TTJets.Fill(iv,self.lv[i][iv]) ; self.htot_TTJetsNonRes.Fill(iv,self.lv[i][iv])
                 else: self.h[i].Fill(iv,tmp);
         
         if pdf_sig!=None:
@@ -881,6 +890,9 @@ class Projection():
         if self.htot_Wres!=None: self.hfinals.append(self.htot_Wres)
         if self.htot_Zres!=None: self.hfinals.append(self.htot_Zres)
         if self.htot_TTJets!=None: self.hfinals.append(self.htot_TTJets)
+        if self.htot_TTJetsTop!=None: self.hfinals.append(self.htot_TTJetsTop)
+        if self.htot_TTJetsW!=None: self.hfinals.append(self.htot_TTJetsW)
+        if self.htot_TTJetsNonRes!=None: self.hfinals.append(self.htot_TTJetsNonRes)
         #for i in range(10,len(h)): hfinals.append(h[i])    
         for b,v in self.neventsPerBin_1.iteritems(): self.dh.SetBinContent(b,self.neventsPerBin_1[b]);
         self.dh.SetBinErrorOption(ROOT.TH1.kPoisson)
