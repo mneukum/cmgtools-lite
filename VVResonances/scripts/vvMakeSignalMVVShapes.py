@@ -234,7 +234,7 @@ for mass in sorted(samples.keys()):
    
     fitter.w.var("MH").setVal(mass)
 
-    fmax=1.5
+    fmax=1.2
     fmin=0.80
     extra_extra_cut = "&& (jj_LV_mass>%f&&jj_LV_mass<%f)"%(fmin*mass,fmax*mass)
 
@@ -243,7 +243,7 @@ for mass in sorted(samples.keys()):
     print " range will be ",setminMX," - ",setmaxMX
     print "options.binsMVV ",options.binsMVV
     ndiv=1000
-    binning= truncate(getBinning(options.binsMVV,setminMX,setmaxMX,ndiv),fmin*mass,1.2*mass)    
+    binning= truncate(getBinning(options.binsMVV,setminMX,setmaxMX,ndiv),fmin*mass,fmax*mass)    
     
     print "----------------------------------------"
     print binning
