@@ -30,7 +30,6 @@ def getBinning(binsMVV,minx,maxx,bins):
         s = binsMVV.split(",")
         for w in s:
             l.append(int(w))
-    print " binning not truncated  ",l
     return l
 
 def truncate(binning,mmin,mmax):
