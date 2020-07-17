@@ -152,20 +152,20 @@ class cuts():
             self.LPSF_htag = data['htagLPSF'+self.yeartag]
             self.vtag_pt_dependence = data["vtag_pt_dependence"+self.yeartag]
             
-            self.catVtag['HP1'] = '('+data["tagging_variables_and_wp"]["varl1Wtag"]+'>'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])+')' 
-            self.catVtag['HP2'] = '('+data["tagging_variables_and_wp"]["varl2Wtag"]+'>'+ data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag])+')' 
-            self.catVtag['LP1'] = '(('+ data["tagging_variables_and_wp"]["varl1Wtag"]+'<'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag]) +')&&('+ data["tagging_variables_and_wp"]["varl1Wtag"] +'>'+ data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag]) +'))' 
-            self.catVtag['LP2'] = '(('+ data["tagging_variables_and_wp"]["varl2Wtag"]+'<'+ data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Wtag"+self.yeartag]) +')&&('+ data["tagging_variables_and_wp"]["varl2Wtag"] +'>'+ data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag]) +'))'
-            self.catVtag['NP1'] =  '('+data["tagging_variables_and_wp"]["varl1Wtag"] +'<' +data["tagging_variables_and_wp"]["l1Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag]) + ')' 
-            self.catVtag['NP2'] =  '('+data["tagging_variables_and_wp"]["varl2Wtag"] +'<' +data["tagging_variables_and_wp"]["l2Wtag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Wtag"+self.yeartag]) + ')' 
-            
-            
-            self.catHtag['HP1'] = '('+data["tagging_variables_and_wp"]["varl1Htag"]+'>'+ data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag])+')' 
-            self.catHtag['HP2'] = '('+data["tagging_variables_and_wp"]["varl2Htag"]+'>'+ data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag])+')' 
-            self.catHtag['LP1'] = '(('+ data["tagging_variables_and_wp"]["varl1Htag"]+'<'+ data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag]) +')&&('+ data["tagging_variables_and_wp"]["varl1Htag"] +'>'+ data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) +'))' 
-            self.catHtag['LP2'] = '(('+ data["tagging_variables_and_wp"]["varl2Htag"]+'<'+ data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_HP_Htag"+self.yeartag]) +')&&('+ data["tagging_variables_and_wp"]["varl2Htag"] +'>'+ data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) +'))'
-            self.catHtag['NP1'] =  '('+data["tagging_variables_and_wp"]["varl1Htag"] +'<' +data["tagging_variables_and_wp"]["l1Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) + ')' 
-            self.catHtag['NP2'] =  '('+data["tagging_variables_and_wp"]["varl2Htag"] +'<' +data["tagging_variables_and_wp"]["l2Htag"+self.yeartag].replace("XX", data["tagging_variables_and_wp"]["WP_LP_Htag"+self.yeartag]) + ')' 
+            self.catVtag['HP1'] =  '('+ self.varl1Wtag +'>'+ self.WPHPl1Wtag +')'
+            self.catVtag['HP2'] =  '('+ self.varl2Wtag +'>'+ self.WPHPl2Wtag +')'
+            self.catVtag['LP1'] = '(('+ self.varl1Wtag +'<'+ self.WPHPl1Wtag +')&&('+ self.varl1Wtag +'>'+ self.WPLPl1Wtag +'))' 
+            self.catVtag['LP2'] = '(('+ self.varl2Wtag +'<'+ self.WPHPl2Wtag +')&&('+ self.varl2Wtag +'>'+ self.WPLPl2Wtag +'))'
+            self.catVtag['NP1'] =  '('+ self.varl1Wtag +'<'+ self.WPLPl1Wtag +')' 
+            self.catVtag['NP2'] =  '('+ self.varl2Wtag +'<'+ self.WPLPl2Wtag +')' 
+
+            self.catHtag['HP1'] =  '('+ self.varl1Htag +'>'+ self.WPHPl1Htag +')' 
+            self.catHtag['HP2'] =  '('+ self.varl2Htag +'>'+ self.WPHPl2Htag +')' 
+            self.catHtag['LP1'] = '(('+ self.varl1Htag +'<'+ self.WPHPl1Htag +')&&('+ self.varl1Htag +'>'+ self.WPLPl1Htag +'))' 
+            self.catHtag['LP2'] = '(('+ self.varl2Htag +'<'+ self.WPHPl2Htag +')&&('+ self.varl2Htag +'>'+ self.WPLPl2Htag +'))'
+            self.catHtag['NP1'] =  '('+ self.varl1Htag +'<'+ self.WPLPl1Htag +')' 
+            self.catHtag['NP2'] =  '('+ self.varl2Htag +'<'+ self.WPLPl2Htag +')' 
+
             
             selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
             for sel in selections:
