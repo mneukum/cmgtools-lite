@@ -55,8 +55,8 @@ if useTriggerWeights:
 #all categories
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP','VBF_VV_HPHP','VBF_VV_HPLP']
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP']
-categories =["NP"]
-#categories =["VH_LPHP"]
+#categories =["NP"]
+#categories =["VH_HPLP"]
        
 #list of signal samples --> nb, radion and vbf samples to be added
 BulkGravWWTemplate="BulkGravToWW_"
@@ -203,25 +203,25 @@ if options.run.find("all")!=-1 or options.run.find("qcd")!=-1:
         f.makeNormalizations("nonRes","JJ_"+str(period),nonResTemplate,0,ctx.cuts['nonres'],"nRes")
 
 if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:    
-    print "for V+jets"
-    print "first we fit"
-    f.fitVJets("JJ_WJets",resTemplate,1.,1.)
-    print "and then we make kernels"
-    print " did you run Detector response  for this period? otherwise the kernels steps will not work!"
-    print "first kernel W"
-    f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
-    print "then kernel Z"
-    f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
-    print "then norm W"
-    f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,ctx.cuts['nonres'],"nRes","",HPSF_vtag,LPSF_vtag)
-    print "then norm Z"
-    f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,ctx.cuts['nonres'],"nRes","",HPSF_vtag,LPSF_vtag)
+    #print "for V+jets"
+    #print "first we fit"
+    #f.fitVJets("JJ_WJets",resTemplate,1.,1.)
+    #print "and then we make kernels"
+    #print " did you run Detector response  for this period? otherwise the kernels steps will not work!"
+    #print "first kernel W"
+    #f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    #print "then kernel Z"
+    #f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    #print "then norm W"
+    #f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
+    #print "then norm Z"
+    #f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
     f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,ctx.cuts['nonres'],"nRes","") # ... so we do not need this
 
 
 if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
     #f.fitTT   ("JJ_%s_TTJets"%(period),TTemplate,1.,)
-    print "resT"
+    #print "resT"
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_resT"+str(period),TTemplate,ctx.cuts['resTT'],"1D",0,1.,1.)
     f.makeNormalizations("TTJets","JJ_resT"+str(period),TTemplate,0,ctx.cuts['resTT'],"nRes","")
     print "resW"
@@ -240,7 +240,7 @@ if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_resWnonresT"+str(period),TTemplate,ctx.cuts['resWnonresT'],"1D",0,1.,1.)
     f.makeNormalizations("TTJets","JJ_resWnonresT"+str(period),TTemplate,0,ctx.cuts['resWnonresT'],"nRes","")
     f.makeNormalizations("TTJets","JJ_nonresT"+str(period),TTemplate,0,ctx.cuts['nonresTT'],"nRes","")
-    #f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
   
 if options.run.find("all")!=-1 or options.run.find("data")!=-1:
     print " Do data "

@@ -80,8 +80,8 @@ def smoothTail(hist):
     hist.Fit(expo,"","",2000,8000)
     for j in range(1,hist.GetNbinsX()+1):
         x=hist.GetXaxis().GetBinCenter(j)
-        if x>2000:
-            hist.SetBinContent(j,expo.Eval(x))
+        #if x>2000:
+        hist.SetBinContent(j,expo.Eval(x))
 
 weights_ = options.weights.split(',')
 

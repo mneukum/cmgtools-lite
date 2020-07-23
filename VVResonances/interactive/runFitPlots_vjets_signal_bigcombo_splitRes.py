@@ -37,7 +37,7 @@ parser.add_option("-M","--mass",dest="signalMass",type=float,help="signal mass",
 parser.add_option("--signalScaleF",dest="signalScaleF",type=float,help="scale factor to apply to signal when drawing so its still visible!",default=100.)
 parser.add_option("--prelim",dest="prelim",type=int,help="add preliminary label",default=0)
 parser.add_option("--channel",dest="channel",help="which category to use? ",default="VV_HPHP")
-parser.add_option("--doFit",dest="fit",action="store_false",help="actually fit the the distributions",default=True)
+parser.add_option("--doFit",dest="fit",action="store_true",help="actually fit the the distributions",default=False)
 parser.add_option("-v","--doVjets",dest="doVjets",action="store_true",help="Fit top",default=False)
 
 (options,args) = parser.parse_args()
@@ -139,7 +139,7 @@ if __name__=="__main__":
      all_expected = {}
      signal_expected= {}
      workspace.var("MJJ").setVal(2000)
-     bkgs = ["nonRes","Wjets","Zjets","TTJetsTop","TTJetsW","TTJetsNonRes"]
+     bkgs = ["nonRes","Wjets","Zjets","TTJetsTop","TTJetsW","TTJetsNonRes","TTJetsWNonResT","TTJetsResWResT" ,"TTJetsTNonResT"]
      #print number of events before the fit
      for year in years:
         data[year] = (workspace.data("data_obs").reduce("CMS_channel==CMS_channel::JJ_"+purity+"_13TeV_"+year))
