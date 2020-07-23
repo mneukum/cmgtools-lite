@@ -37,20 +37,25 @@ class DataCardMaker:
         info=json.load(f)
         # check if json contains array or not:
         if isinstance(info[variablename],list) == False:
+            print " polynomial !!! "
         # set polynomial with parameters from jsonFile
-            if (name.find('MEAN')==-1 and name.find("SIGMA")==-1): 
+            if (name.find('MEAN')==-1 and name.find("SIGMA")==-1) and  (name.find('mean')==-1 and name.find("sigma")==-1) and (name.find('meanH')==-1 and name.find("sigmaH")==-1):
                 self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=name,param=info[variablename]))
             else:
-                if corr==True:
-                    print "MVV sigma & mean will be correlated to jet mass"
-                    self.w.factory("expr::"+name+"('("+info[variablename]+")*"+info['corr_'+variablename.lower()]+"*(1+"+uncstr+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")
-                else:
-                    print "MVV sigma & mean will NOT be correlated to jet mass"
-                    self.w.factory("expr::"+name+"('("+info[varname]+")*(1+"++")',MH,"+','.join(uncysts)+")")
-            
+                if (name.find('MEAN')!=-1 or name.find("SIGMA")!=-1):
+                    if corr==True:
+                        print "MVV sigma & mean will be correlated to jet mass"
+                        self.w.factory("expr::"+name+"('("+info[variablename]+")*"+info['corr_'+variablename.lower()]+"*(1+"+uncstr+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")
+                    else:
+                        print "MVV sigma & mean will NOT be correlated to jet mass"
+                        self.w.factory("expr::"+name+"('("+info[variablename]+")*("+uncstr+")',MH,"+','+uncsyst[0]+")")
+                elif (name.find('mean')!=-1 or name.find("sigma")!=-1) or (name.find('meanH')!=-1 or name.find("sigmaH")!=-1):
+                    self.w.factory("expr::"+name+"('("+info[variablename]+")*("+uncstr+")',MH,"+','+uncsyst[0]+")")
+
         # no need to return since this is already in the WS
-        
+
         else:
+            print " set spline with knots from jsonFile    "
             # set spline with knots from jsonFile 
             # first: make a two arrays from json 
             l = info[variablename]
@@ -59,6 +64,7 @@ class DataCardMaker:
             for i in range(0,len(l)):
                 xArr.append(l[i][0])
                 yArr.append(l[i][1])
+
             if variablename.find("yield")!=-1:
                 print " make spline " + name+'spline'
                 spline=ROOT.RooSpline1D(name+'spline',name+'spline',self.w.var("MH"),len(xArr),array("d",xArr),array("d",yArr))    
@@ -80,14 +86,12 @@ class DataCardMaker:
                 getattr(self.w,'import')(spline,ROOT.RooFit.RenameVariable(name,name))
                 if (name.find('MEAN')!=-1 or name.find('SIGMA')!=-1) and corr==True:
                    print "MVV sigma & mean will be correlated to jet mass"
-                   self.w.factory("expr::"+uncsyst[0]+"expr_corr('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+")")  
-                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr_corr')))
+                   if self.w.function(uncsyst[0]+"expr_corr")== None:
+                       self.w.factory("expr::"+uncsyst[0]+"expr_corr('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+")")
+                       self.w.factory("expr::"+name+"('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+","+name+"spline"+")")
                 else:
                    print "MVV sigma & mean will NOT be correlated to jet mass"
-                   self.w.factory("expr::"+uncsyst[0]+"expr('"+uncstr+"',"+uncsyst[0]+")")
-                   prd = ROOT.RooProduct(name,name,ROOT.RooArgList(self.w.function(name+'spline'),self.w.function(uncsyst[0]+'expr')))
-                getattr(self.w,'import')(prd,ROOT.RooFit.RenameVariable(name,name))
-
+                   self.w.factory("expr::"+name+"('"+uncstr+"*"+name+"spline"+"',"+uncsyst[0]+","+name+"spline"+")")
                
                 
         f.close()
@@ -146,7 +150,7 @@ class DataCardMaker:
         #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=ALPHA1Var,param=info['ALPHA1']))
         #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N1Var,param=info['N1']))
         #self.w.factory("expr::{name}('MH*0+{param}',MH)".format(name=N2Var,param=info['N2']))  
-                
+
 
         pdfName="_".join([name,self.tag])
         vvMass = ROOT.RooDoubleCB(pdfName,pdfName,self.w.var(MVV),self.w.function(SCALEVar),self.w.function(SIGMAVar),self.w.function(ALPHA1Var),self.w.function(N1Var),self.w.function(ALPHA2Var),self.w.function(N2Var))
