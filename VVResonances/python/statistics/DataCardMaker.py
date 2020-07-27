@@ -87,8 +87,8 @@ class DataCardMaker:
                 if (name.find('MEAN')!=-1 or name.find('SIGMA')!=-1) and corr==True:
                    print "MVV sigma & mean will be correlated to jet mass"
                    if self.w.function(uncsyst[0]+"expr_corr")== None:
-                       self.w.factory("expr::"+uncsyst[0]+"expr_corr('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+")")
-                       self.w.factory("expr::"+name+"('"+uncstr+"*"+info['corr_'+variablename.lower()]+"',{MH,MJ1,MJ2},"+uncsyst[0]+","+name+"spline"+")")
+                       self.w.factory("expr::{syst}expr_corr('{syst_str}*{corr_str}',MH,MJ1,MJ2,{syst})".format(syst=uncsyst[0],syst_str=uncstr,corr_str=info['corr_'+variablename.lower()]))
+                       self.w.factory("expr::{name}('{syst_str}*{corr_str}*({spline})',MH,MJ1,MJ2,{syst},{spline})".format(syst=uncsyst[0],syst_str=uncstr,corr_str=info['corr_'+variablename.lower()],name=name,spline=name+"spline"))
                 else:
                    print "MVV sigma & mean will NOT be correlated to jet mass"
                    self.w.factory("expr::"+name+"('"+uncstr+"*"+name+"spline"+"',"+uncsyst[0]+","+name+"spline"+")")
