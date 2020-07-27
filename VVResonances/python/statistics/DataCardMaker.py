@@ -45,7 +45,7 @@ class DataCardMaker:
                 if (name.find('MEAN')!=-1 or name.find("SIGMA")!=-1):
                     if corr==True:
                         print "MVV sigma & mean will be correlated to jet mass"
-                        self.w.factory("expr::"+name+"('("+info[variablename]+")*"+info['corr_'+variablename.lower()]+"*(1+"+uncstr+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")
+                        self.w.factory("expr::"+name+"('("+info[variablename]+")*"+info['corr_'+variablename.lower()]+"*("+uncstr+")',{MH,MJ1,MJ2},"+uncsyst[0]+")")
                     else:
                         print "MVV sigma & mean will NOT be correlated to jet mass"
                         self.w.factory("expr::"+name+"('("+info[variablename]+")*("+uncstr+")',MH,"+','+uncsyst[0]+")")
