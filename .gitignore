@@ -11,4 +11,8 @@ __init__.py
 LSFJOB*/
 *.pdf
 *.png
-
+*.root
+PostFit*
+*.json
+*.txt
+tmp*

@@ -32,20 +32,27 @@ parser.add_option("--pdfz",dest="pdfz",help="name of pdfs lie PTZUp etc",default
 parser.add_option("--pdfx",dest="pdfx",help="name of pdfs lie PTXUp etc",default="")
 parser.add_option("--pdfy",dest="pdfy",help="name of pdfs lie PTYUp etc",default="")
 parser.add_option("-s","--signal",dest="fitSignal",action="store_true",help="do S+B fit",default=False)
+parser.add_option("--doFit",dest="fit",action="store_false",help="actually fit the the distributions",default=True)
 parser.add_option("-t","--addTop",dest="addTop",action="store_true",help="Fit top",default=False)
+parser.add_option("-v","--doVjets",dest="doVjets",action="store_true",help="Fit top",default=False)
 parser.add_option("-M","--mass",dest="signalMass",type=float,help="signal mass",default=1560.)
 parser.add_option("--prelim",dest="prelim",type=int,help="add preliminary label",default=0)
 parser.add_option("--log",dest="log",help="write output in logfile given as argument here!",default="chi2.log")
+parser.add_option("--channel",dest="channel",help="which category to use? ",default="VV_HPHP")
 
 (options,args) = parser.parse_args()
 ROOT.gStyle.SetOptStat(0)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
 #colors = [ROOT.kBlack,ROOT.kPink-1,ROOT.kAzure+1,ROOT.kAzure+1,210,210,ROOT.kMagenta,ROOT.kMagenta,ROOT.kOrange,ROOT.kOrange,ROOT.kViolet,ROOT.kViolet]
 colors = [ROOT.kGray+2,ROOT.kRed,ROOT.kBlue,ROOT.kGray+1,210,210,ROOT.kMagenta,ROOT.kMagenta,ROOT.kOrange,ROOT.kOrange,ROOT.kViolet,ROOT.kViolet]
+doFit = options.fit
+
 
 signalName = "ZprimeZH"
 if options.name.find("WZ")!=-1:
     signalName="WprimeWZ"
+if options.name.find("WH")!=-1:
+    signalName="WprimeWH"
 if options.name.find("ZprimeWW")!=-1:
     signalName="ZprimeWW"
 if options.name.find("BulkGWW")!=-1:
@@ -54,9 +61,6 @@ if options.name.find("BulkGZZ")!=-1:
     signalName="BulkGZZ"
 period = "2016"
 if options.name.find("2017")!=-1: period = "2017"
-
-if options.label.find("sigonly")!=-1:
-    doFit=False
 
 
 def calculateChi2ForSig(hsig,pred,axis,logfile,label):
@@ -323,18 +327,18 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
     histos[0].GetYaxis().SetLabelSize(0.06)
     histos[0].Draw('HIST')
 
- 
-    histos[1].SetLineColor(colors[1])
-    histos[1].SetLineWidth(2)
+    if len(histos)>1:
+        histos[1].SetLineColor(colors[1])
+        histos[1].SetLineWidth(2)
+        
+        histos[2].SetLineColor(colors[2])
+        histos[2].SetLineWidth(2)
+        
     
-    histos[2].SetLineColor(colors[2])
-    histos[2].SetLineWidth(2)
-    
-    
-    if options.addTop:
-      histos[3].SetLineColor(colors[3])
-      histos[3].SetLineWidth(2)
-      leg.AddEntry(histos[3],"t","l")
+        if options.addTop:
+            histos[3].SetLineColor(colors[3])
+            histos[3].SetLineWidth(2)
+            leg.AddEntry(histos[3],"t","l")
 	   
     for i in range(4,len(histos)):
         histos[i].SetLineColor(colors[i])
@@ -364,7 +368,7 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
         scaling = 500.
         eff = 0.02
     
-    if hsig:
+    if hsig and (options.name.find('sigonly')!=-1  and doFit==0):
       print hsig.Integral()
       if hsig.Integral()!=0.:   
         hsig.Scale(scaling/normsig)
@@ -374,6 +378,7 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
       hsig.SetFillColor(ROOT.kGreen-6)
       hsig.SetLineColor(ROOT.kBlack)
       hsig.SetLineStyle(1)
+      #hsig.SetTitle("category  "+purity)
       hsig.Draw("HISTsame")
      #leg.AddEntry(hsig,"Signal pdf","F")
     
@@ -383,12 +388,14 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
             errors[0].Draw("2same")
         else:
             errors[0].Draw("3same")
+    histos[0].SetTitle("category  "+purity)
     histos[0].Draw("samehist")
-    if options.addTop: histos[3].Draw("histsame") 
-    histos[1].SetLineStyle(7)
-    histos[2].SetLineStyle(6)
-    histos[1].Draw("histsame") 
-    histos[2].Draw("histsame")
+    if len(histos)>1:
+        if options.addTop: histos[3].Draw("histsame") 
+        histos[1].SetLineStyle(7)
+        histos[2].SetLineStyle(6)
+        histos[1].Draw("histsame") 
+        histos[2].Draw("histsame")
     hdata.Draw("samePE0")         
     leg.SetLineColor(0)
     
@@ -397,8 +404,9 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
     leg.AddEntry(histos[0],"Signal+background fit","l")
     if errors!=None:
         leg.AddEntry(errors[0],"#pm 1#sigma unc.","f")
-    leg.AddEntry(histos[1],"W+jets, t#bar{t}","l")
-    leg.AddEntry(histos[2],"Z+jets","l")
+    if len(histos)>1:    
+        leg.AddEntry(histos[1],"W+jets, t#bar{t}","l")
+        leg.AddEntry(histos[2],"Z+jets","l")
     
     text = "G_{bulk} (%.1f TeV) #rightarrow WW (#times %i)"%(options.signalMass/1000.,scaling)
     if (options.signalMass%1000.)==0:
@@ -413,6 +421,17 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
         text = "Z' (%.1f TeV) #rightarrow ZH (#times %i)"%(options.signalMass/1000.,scaling)
         if (options.signalMass%1000.)==0:
             text = "Z' (%i TeV) #rightarrow ZH (#times %i)"%(options.signalMass/1000.,scaling) 
+            
+            
+    if signalName.find("WprimeWZ")!=-1:
+        text = "W' (%.1f TeV) #rightarrow WZ (#times %i)"%(options.signalMass/1000.,scaling)
+        if (options.signalMass%1000.)==0:
+            text = "W' (%i TeV) #rightarrow WZ (#times %i)"%(options.signalMass/1000.,scaling) 
+            
+    if signalName.find("WprimeWH")!=-1:
+        text = "W' (%.1f TeV) #rightarrow WH (#times %i)"%(options.signalMass/1000.,scaling)
+        if (options.signalMass%1000.)==0:
+            text = "W' (%i TeV) #rightarrow WH (#times %i)"%(options.signalMass/1000.,scaling) 
      
     if options.fitSignal==True: 
         leg.AddEntry(hsig,text,"F")
@@ -444,6 +463,7 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
     pt2.SetFillColor(0)
     pt2.SetBorderSize(0)
     pt2.SetFillStyle(0)
+    pt2.AddText("category  "+purity)
     pt2.AddText(extra1)
     pt2.AddText(extra2)
     pt2.Draw()
@@ -482,7 +502,7 @@ def MakePlots(histos,hdata,hsig,axis,nBins,normsig = 1.,errors=None):
     
     #for pulls
     if errors ==None: errors=[0,0];
-    if options.name.find('sigOnly')!=-1: graphs = addPullPlot(hdata,hsig,nBins,errors[0])
+    if options.name.find('sigonly')!=-1: graphs = addPullPlot(hdata,hsig,nBins,errors[0])
     else:
         graphs = addPullPlot(hdata,histos[0],nBins,errors[0])
     # graphs = addRatioPlot(hdata,histos[0],nBins,errors[0])
@@ -579,21 +599,25 @@ def doZprojection(pdfs,data,norm_nonres,norm_Wres,pdf_sig,norm_sig,norm_Zres,nor
 
     htot_nonres = ROOT.TH1F("htot_nonres","htot_nonres",len(zBinslowedge)-1,zBinslowedge)
     htot_nonres.Add(h[0])
-
-    htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(zBinslowedge)-1,zBinslowedge)
-    htot_Wres.Add(h[1])
     
-    htot_Zres = ROOT.TH1F("htot_Zres","htot_Zres",len(zBinslowedge)-1,zBinslowedge)
-    htot_Zres.Add(h[2])
-    
-    htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(zBinslowedge)-1,zBinslowedge)
-    htot_TThad.Add(h[3])
-            	    
     htot = ROOT.TH1F("htot","htot",len(zBinslowedge)-1,zBinslowedge)
     htot.Add(htot_nonres)
-    htot.Add(htot_Wres)
-    htot.Add(htot_Zres)
-    if options.addTop: htot.Add(htot_TThad)
+    
+    if len(h)>2:
+        htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(zBinslowedge)-1,zBinslowedge)
+        htot_Wres.Add(h[1])
+        
+        
+        htot_Zres = ROOT.TH1F("htot_Zres","htot_Zres",len(zBinslowedge)-1,zBinslowedge)
+        htot_Zres.Add(h[2])
+        
+        htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(zBinslowedge)-1,zBinslowedge)
+        htot_TThad.Add(h[3])
+            	    
+    
+        htot.Add(htot_Wres)
+        htot.Add(htot_Zres)
+        if options.addTop: htot.Add(htot_TThad)
     htot.Add(htot_sig)
 
     print htot_sig
@@ -601,8 +625,9 @@ def doZprojection(pdfs,data,norm_nonres,norm_Wres,pdf_sig,norm_sig,norm_Zres,nor
     print " norm sig "+str(norm_sig[0])
     hfinals = []
     hfinals.append(htot)
-    hfinals.append(htot_Wres)
-    hfinals.append(htot_Zres)
+    if len(h)>2:
+        hfinals.append(htot_Wres)
+        hfinals.append(htot_Zres)
     if options.addTop: hfinals.append(htot_TThad)
     for i in range(10,len(h)): hfinals.append(h[i])    
     for b,v in neventsPerBin_1.iteritems(): dh.SetBinContent(b,neventsPerBin_1[b])
@@ -671,28 +696,32 @@ def doXprojection(pdfs,data1,norm1_nonres,norm1_Wres,pdf1_sig,norm1_sig,norm1_Zr
    
     htot_nonres = ROOT.TH1F("htot_nonres","htot_nonres",len(xBinslowedge)-1,xBinslowedge)
     htot_nonres.Add(h[0])
- 
-    htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(xBinslowedge)-1,xBinslowedge)
-    htot_Wres.Add(h[1])
-   
-    htot_Zres = ROOT.TH1F("htot_Zres","htot_Zres",len(xBinslowedge)-1,xBinslowedge)
-    htot_Zres.Add(h[2])
     
-    htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(xBinslowedge)-1,xBinslowedge)
-    htot_TThad.Add(h[3])
-            	    
     htot = ROOT.TH1F("htot","htot",len(xBinslowedge)-1,xBinslowedge)
     htot.Add(htot_nonres)
-    htot.Add(htot_Wres)
-    htot.Add(htot_Zres)
-    if options.addTop: htot.Add(htot_TThad)
+ 
+    if len(h) > 2:
+        htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(xBinslowedge)-1,xBinslowedge)
+        htot_Wres.Add(h[1])
+    
+        htot_Zres = ROOT.TH1F("htot_Zres","htot_Zres",len(xBinslowedge)-1,xBinslowedge)
+        htot_Zres.Add(h[2])
+        
+        htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(xBinslowedge)-1,xBinslowedge)
+        htot_TThad.Add(h[3])
+                        
+        
+        htot.Add(htot_Wres)
+        htot.Add(htot_Zres)
+        if options.addTop: htot.Add(htot_TThad)
     htot.Add(htot_sig)
 
     hfinals = []
     hfinals.append(htot)
-    hfinals.append(htot_Wres)
-    hfinals.append(htot_Zres)
-    if options.addTop: hfinals.append(htot_TThad)
+    if len(h) > 2:
+        hfinals.append(htot_Wres)
+        hfinals.append(htot_Zres)
+        if options.addTop: hfinals.append(htot_TThad)
     for i in range(10,len(h)): hfinals.append(h[i])    
     for b,v in neventsPerBin_1.iteritems(): dh.SetBinContent(b,neventsPerBin_1[b])
     dh.SetBinErrorOption(ROOT.TH1.kPoisson)
@@ -759,28 +788,30 @@ def doYprojection(pdfs,data1,norm1_nonres,norm1_Wres,pdf1_sig,norm1_sig,norm1_Zr
 
     htot_nonres = ROOT.TH1F("htot_nonres","htot_nonres",len(yBinslowedge)-1,yBinslowedge)
     htot_nonres.Add(h[0])
-    
-    htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(yBinslowedge)-1,yBinslowedge)
-    htot_Wres.Add(h[1])
-   
-    htot_Zres = ROOT.TH1F("htot_Wres","htot_Wres",len(yBinslowedge)-1,yBinslowedge)
-    htot_Zres.Add(h[2])
-    
-    htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(yBinslowedge)-1,yBinslowedge)
-    htot_TThad.Add(h[3])
-             	    
     htot = ROOT.TH1F("htot","htot",len(yBinslowedge)-1,yBinslowedge)
     htot.Add(htot_nonres)
-    htot.Add(htot_Wres)
-    htot.Add(htot_Zres)
-    if options.addTop:htot.Add(htot_TThad)
+    
+    if len(h) > 2:
+        htot_Wres = ROOT.TH1F("htot_Wres","htot_Wres",len(yBinslowedge)-1,yBinslowedge)
+        htot_Wres.Add(h[1])
+    
+        htot_Zres = ROOT.TH1F("htot_Wres","htot_Wres",len(yBinslowedge)-1,yBinslowedge)
+        htot_Zres.Add(h[2])
+        
+        htot_TThad = ROOT.TH1F("htot_TThad","htot_TThad",len(yBinslowedge)-1,yBinslowedge)
+        htot_TThad.Add(h[3])
+                        
+        htot.Add(htot_Wres)
+        htot.Add(htot_Zres)
+        if options.addTop:htot.Add(htot_TThad)
     htot.Add(htot_sig)
 
     hfinals = []
     hfinals.append(htot)
-    hfinals.append(htot_Wres)
-    hfinals.append(htot_Zres)
-    if options.addTop:hfinals.append(htot_TThad)
+    if len(h) > 2:
+        hfinals.append(htot_Wres)
+        hfinals.append(htot_Zres)
+        if options.addTop:hfinals.append(htot_TThad)
     for i in range(10,len(h)): hfinals.append(h[i])    
     for b,v in neventsPerBin_1.iteritems(): dh.SetBinContent(b,neventsPerBin_1[b])
     dh.SetBinErrorOption(ROOT.TH1.kPoisson)
@@ -927,7 +958,10 @@ def draw_error_band(histo_central,norm1,err_norm1,rpdf1,x_min,proj):
      syst[j] = ROOT.TGraph(number_point+1);
      
      #paramters value are randomized using rfres and this can be done also if they are not decorrelate
-     par_tmp = ROOT.RooArgList(fitresult_bkg_only.randomizePars())
+     if options.label.find("sigonly")==-1:
+        par_tmp = ROOT.RooArgList(fitresult_bkg_only.randomizePars())
+     else:
+        par_tmp = ROOT.RooArgList(fitresult.randomizePars())
      iter = par_pdf1.createIterator()
      var = iter.Next()
 
@@ -1040,7 +1074,7 @@ if __name__=="__main__":
      finMC = ROOT.TFile(options.input,"READ");
      hinMC = finMC.Get("nonRes");
      print options.name
-     purity = options.name.split('_')[3]+"_"+ options.name.split('_')[4]
+     purity = options.channel
      print purity
      #if options.input.find("VV") !=-1: purity="VV_"+purity
      #elif options.input.find("VH") !=-1: purity="VH_"+purity
@@ -1105,20 +1139,22 @@ if __name__=="__main__":
      print "pdf1Name ",pdf1Name
      print args
      print "Expected number of QCD events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_nonRes"].getVal(),"("+period+")"
-     print "Expected number of W+jets events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal(),"("+period+")"
-     print "Expected number of Z+jets events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal(),"("+period+")"
+     if options.doVjets:
+        print "Expected number of W+jets events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal(),"("+period+")"
+        print "Expected number of Z+jets events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal(),"("+period+")"
 
      qcd_exp        = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_nonRes"].getVal()
-     wjets_exp      = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal()
-     zjets_exp      = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal()
-     
+     if options.doVjets:
+        wjets_exp      = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal()
+        zjets_exp      = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal()
+     else: wjets_exp= 0.; zjets_exp=0.
      
      if options.addTop:
        print "Expected number of tt events:",(args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_TThad"].getVal(),"("+period+")"
      if options.fitSignal:
       workspace.var("MH").setVal(options.signalMass)
       workspace.var("MH").setConstant(1)
-      #workspace.var("r").setRange(0,1000)
+      workspace.var("r").setRange(0,2000)
       #workspace.var("r").setVal(9)
       print "signalName ",signalName
       print "Expected signal yields:",(args[pdf1Name].getComponents())["n_exp_final_binJJ_"+purity+"_13TeV_"+period+"_proc_"+signalName+""].getVal(),"("+period+")"
@@ -1128,8 +1164,9 @@ if __name__=="__main__":
      print
      if doFit:
         fitresult = model.fitTo(data_all,ROOT.RooFit.SumW2Error(not(options.data)),ROOT.RooFit.Minos(0),ROOT.RooFit.Verbose(0),ROOT.RooFit.Save(1),ROOT.RooFit.NumCPU(8))  
-        
-        fitresult_bkg_only = model_b.fitTo(data_all,ROOT.RooFit.SumW2Error(not(options.data)),ROOT.RooFit.Minos(0),ROOT.RooFit.Verbose(0),ROOT.RooFit.Save(1),ROOT.RooFit.NumCPU(8))  
+        if options.label.find("sigonly")==-1:
+            fitresult_bkg_only = model_b.fitTo(data_all,ROOT.RooFit.SumW2Error(not(options.data)),ROOT.RooFit.Minos(0),ROOT.RooFit.Verbose(0),ROOT.RooFit.Save(1),ROOT.RooFit.NumCPU(8))
+        else: fitresult_bkg_only = fitresult
         
        
         
@@ -1149,16 +1186,16 @@ if __name__=="__main__":
      pdf1_nonres_shape_postfit.coefList().Print()
      print
     
-     
-     print period+" Postfit W+jets res pdf:"
-     pdf1_Wres_shape_postfit  = args["shapeBkg_Wjets_JJ_"+purity+"_13TeV_2016"]
-     pdf1_Wres_shape_postfit.Print()
-    
-     
-     print period+" Postfit Z+jets res pdf:"
-     pdf1_Zres_shape_postfit  = args["shapeBkg_Zjets_JJ_"+purity+"_13TeV_2016"]
-     pdf1_Zres_shape_postfit.Print()
-     
+     if options.doVjets:
+        print period+" Postfit W+jets res pdf:"
+        pdf1_Wres_shape_postfit  = args["shapeBkg_Wjets_JJ_"+purity+"_13TeV_2016"]
+        pdf1_Wres_shape_postfit.Print()
+        
+        
+        print period+" Postfit Z+jets res pdf:"
+        pdf1_Zres_shape_postfit  = args["shapeBkg_Zjets_JJ_"+purity+"_13TeV_2016"]
+        pdf1_Zres_shape_postfit.Print()
+        
      
      if options.addTop:
         print period+" Postfit tt res pdf:"
@@ -1183,14 +1220,16 @@ if __name__=="__main__":
 		    
      allpdfsz = [] #let's have always pre-fit and post-fit as firt elements here, and add the optional shapes if you want with options.pdf
      allpdfsz.append(pdf1_nonres_shape_postfit)
-     allpdfsz.append(pdf1_Wres_shape_postfit)
-     allpdfsz.append(pdf1_Zres_shape_postfit)
+     if options.doVjets:
+        allpdfsz.append(pdf1_Wres_shape_postfit)
+        allpdfsz.append(pdf1_Zres_shape_postfit)
+    
      
-     if options.addTop:
-      print "add top"
-      allpdfsz.append(pdf1_TThad_shape_postfit)
-     else:
-       allpdfsz.append(pdf1_Zres_shape_postfit)
+        if options.addTop:
+            print "add top"
+            allpdfsz.append(pdf1_TThad_shape_postfit)
+        else:
+            allpdfsz.append(pdf1_Zres_shape_postfit)
      allpdfsz.append(pdf1_shape_postfit)
      for p in options.pdfz.split(","):
          if p == '': continue
@@ -1200,12 +1239,13 @@ if __name__=="__main__":
 
      allpdfsx = [] #let's have always pre-fit and post-fit as firt elements here, and add the optional shapes if you want with options.pdf
      allpdfsx.append(pdf1_nonres_shape_postfit)
-     allpdfsx.append(pdf1_Wres_shape_postfit)
-     allpdfsx.append(pdf1_Zres_shape_postfit)
-     if options.addTop:
-      allpdfsx.append(pdf1_TThad_shape_postfit)
-     else:
-       allpdfsx.append(pdf1_Zres_shape_postfit) #dummy, not used
+     if options.doVjets:
+        allpdfsx.append(pdf1_Wres_shape_postfit)
+        allpdfsx.append(pdf1_Zres_shape_postfit)
+        if options.addTop:
+            allpdfsx.append(pdf1_TThad_shape_postfit)
+        else:
+            allpdfsx.append(pdf1_Zres_shape_postfit) #dummy, not used
      allpdfsx.append(pdf1_shape_postfit)
      for p in options.pdfx.split(","):
          if p == '': continue
@@ -1215,12 +1255,13 @@ if __name__=="__main__":
 
      allpdfsy = [] #let's have always pre-fit and post-fit as firt elements here, and add the optional shapes if you want with options.pdf
      allpdfsy.append(pdf1_nonres_shape_postfit)
-     allpdfsy.append(pdf1_Wres_shape_postfit)
-     allpdfsy.append(pdf1_Zres_shape_postfit)
-     if options.addTop:
-      allpdfsy.append(pdf1_TThad_shape_postfit)
-     else:
-      allpdfsy.append(pdf1_Zres_shape_postfit)
+     if options.doVjets:
+        allpdfsy.append(pdf1_Wres_shape_postfit)
+        allpdfsy.append(pdf1_Zres_shape_postfit)
+        if options.addTop:
+            allpdfsy.append(pdf1_TThad_shape_postfit)
+        else:
+            allpdfsy.append(pdf1_Zres_shape_postfit)
      allpdfsy.append(pdf1_shape_postfit)
      for p in options.pdfy.split(","):
          if p == '': continue
@@ -1232,9 +1273,10 @@ if __name__=="__main__":
      norm1_nonres = [0,0]
      norm1_nonres[0] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_nonRes"].getVal()
      norm1_Wres = [0,0]
-     norm1_Wres[0] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal()
      norm1_Zres = [0,0]
-     norm1_Zres[0] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal()
+     if options.doVjets:
+        norm1_Wres[0] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getVal()
+        norm1_Zres[0] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getVal()
      norm1_TThad = [0,0]
      norm1_sig = [0,0]
       
@@ -1243,17 +1285,17 @@ if __name__=="__main__":
      if doFit:
         norm1_nonres[1] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_nonRes"].getPropagatedError(fitresult)
         
-                    
-     print
-     (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].dump()
-     if doFit:
-        norm1_Wres[1] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getPropagatedError(fitresult)
-        
-     print
-     (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].dump()
-     if doFit:
-        norm1_Zres[1] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getPropagatedError(fitresult)
-        
+     if options.doVjets:              
+        print
+        (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].dump()
+        if doFit:
+            norm1_Wres[1] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Wjets"].getPropagatedError(fitresult)
+            
+        print
+        (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].dump()
+        if doFit:
+            norm1_Zres[1] = (args[pdf1Name].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+period+"_proc_Zjets"].getPropagatedError(fitresult)
+            
         
      if options.addTop:
         print
@@ -1281,11 +1323,12 @@ if __name__=="__main__":
      if doFit:                
         print
         print "QCD normalization after fit: ",norm1_nonres[0],"+/-",norm1_nonres[1],"("+period+")"
-        print "W+jets normalization after fit: ",norm1_Wres[0],"+/-",norm1_Wres[1],"("+period+")"
-        print "Z+jets normalization after fit: ",norm1_Zres[0],"+/-",norm1_Zres[1],"("+period+")"
-        if options.addTop: print "tt normalization after fit: ",norm1_TThad[0],"+/-",norm1_TThad[1],"("+period+")"
-        if options.fitSignal: print "Signal yields after fit: ",norm1_sig[0],"+/-",norm1_sig[1],"("+period+")"
-        print
+        if options.doVjets:
+            print "W+jets normalization after fit: ",norm1_Wres[0],"+/-",norm1_Wres[1],"("+period+")"
+            print "Z+jets normalization after fit: ",norm1_Zres[0],"+/-",norm1_Zres[1],"("+period+")"
+            if options.addTop: print "tt normalization after fit: ",norm1_TThad[0],"+/-",norm1_TThad[1],"("+period+")"
+            if options.fitSignal: print "Signal yields after fit: ",norm1_sig[0],"+/-",norm1_sig[1],"("+period+")"
+            print
      
                    
     
@@ -1334,4 +1377,4 @@ if __name__=="__main__":
      
      logfile.close()
 
-     print purity
+     

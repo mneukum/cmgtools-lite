@@ -3,6 +3,7 @@ import json
 from numpy import random
 from array import array
 import sys,commands
+from  CMGTools.VVResonances.plotting.CMS_lumi import *
 
 class Fitter(object):
     def __init__(self,poi = ['x']):
@@ -14,6 +15,9 @@ class Fitter(object):
         self.dimensions = len(poi)
         self.poi=poi
         for v in poi:
+          if v.find("[")!=-1 and v.find("]")!=-1:
+            self.w.factory(v)
+          else:  
             self.w.factory(v+"[1,161]")
 
     def delete(self):
@@ -252,7 +256,6 @@ class Fitter(object):
         self.w.factory("PROD::{name}({name}NonRes,{name}S)".format(name=name))
 
 
-
     def erfexp2Gaus(self,name = 'model',poi='x'):      
         ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
 
@@ -261,10 +264,11 @@ class Fitter(object):
         self.w.factory("c_2[-10,-1000000,100000]")
         erfexp = ROOT.RooErfExpPdf(name+"Erf",name,self.w.var(poi),self.w.var("c_0"),self.w.var("c_1"),self.w.var("c_2"))
         getattr(self.w,'import')(erfexp,ROOT.RooFit.Rename(name))
-        self.w.factory("RooGaussian::gaus1("+poi+",mean1[80,60,100],sigma1[10,0,200])")
-        self.w.factory("RooGaussian::gaus2("+poi+",mean2[0,200],sigma2[0,200])")
-        self.w.factory("SUM::gaus(f[0,1]*gaus1,gaus2)")
-        self.w.factory("PROD::"+name+"(gaus,"+name+"Erf)")
+        self.w.factory("RooGaussian::gaus1("+poi+",mean1[80.,60.,100.],sigma1[7.,5.,20.])")
+        self.w.factory("RooGaussian::gaus2("+poi+",mean2[170.,150.,200.],sigma2[14,5.,20.])")
+        self.w.factory("SUM::gaus(f_g1[0.05,0.95]*gaus1,gaus2)") #FIXME
+        self.w.factory("SUM::"+name+"(f_res[0.01,0.99]*gaus,"+name+"Erf)")
+        # self.w.factory("PROD::"+name+"(gaus,"+name+"Erf)")
 
 
 
@@ -1034,29 +1038,47 @@ class Fitter(object):
 
 
 
-    def fit(self,model = "model",data="data",options=[]):
+    def fit(self,model = "model",data="data",options=[],requireConvergence=False):
+      covQual = -1
+      i = 0
+      while covQual != 3 and i<5:
+
         if len(options)==0:
-            fitresults = self.w.pdf(model).fitTo(self.w.data("data"))
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data))
         if len(options)==1:
-            fitresults = self.w.pdf(model).fitTo(self.w.data("data"),options[0])	    
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0])	    
         if len(options)==2:
-            fitresults = self.w.pdf(model).fitTo(self.w.data("data"),options[0],options[1])
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0],options[1])
         if len(options)==3:
-            fitresults = self.w.pdf(model).fitTo(self.w.data("data"),options[0],options[1],options[2])
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0],options[1],options[2])
         if len(options)==4:
-            fitresults = self.w.pdf(model).fitTo(self.w.data("data"),options[0],options[1],options[2],options[3])
-	 
-	if fitresults:
-	 fitresults.Print() 
-	 f = ROOT.TFile.Open('fitresults.root','RECREATE')
-	 fitresults.Write()
-	 f.Close()
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0],options[1],options[2],options[3])
+        if len(options)==5:
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0],options[1],options[2],options[3],options[4])
+        if len(options)==6:
+            fitresults = self.w.pdf(model).fitTo(self.w.data(data),options[0],options[1],options[2],options[3],options[4],options[5])        
+        if requireConvergence:
+          covQual = fitresults.covQual()
+          i +=1
+          print ("Requiring covariance matrix to be accurate. Status is {}".format(covQual))
+        else:
+          covQual = 3
+          i = 5
+      
+      if fitresults:
+          print ("\n Covariance matrix quality = {} \n (=0 not calculated, =1 approximated, =2 made pos def , =3 accurate) \n".format(fitresults.covQual()))
+          print ("Fit status = {} \n (= 1:Covariance was made pos defined, = 2:Hesse is invalid, = 3:Edm is above max, = 4:Reached call limit, = 5:Any other failure) \n ".format(fitresults.status()))
+          
+          fitresults.Print() 
+          f = ROOT.TFile.Open('fitresults.root','RECREATE')
+          fitresults.Write()
+          f.Close()
 	 
     def getFunc(self,model = "model"):
         return self.w.pdf(model)
 
     def getLegend(self):
-        self.legend = ROOT.TLegend(0.7510112,0.7183362,0.8502143,0.919833)
+        self.legend = ROOT.TLegend(0.7010112,0.6583362,0.8502143,0.879833)
         self.legend.SetTextSize(0.032)
         self.legend.SetLineColor(0)
         self.legend.SetShadowColor(0)
@@ -1073,6 +1095,110 @@ class Fitter(object):
         print "Fetching error " ,self.w.var(var).getError()
         return (self.w.var(var).getVal(), self.w.var(var).getError())
 
+    def projection_ratioplot(self,model = "model",data="data",poi="x",filename="fit.root",binning=0,logy=False,xtitle='x',pavetext="",xmin=55.,xmax=215.,mass=1000):
+      
+      self.frame = self.w.var(poi).frame()
+      self.w.data(data).plotOn(self.frame,ROOT.RooFit.Name( data ),ROOT.RooFit.LineColor(ROOT.kBlack),ROOT.RooFit.LineStyle(1))
+      self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.LineColor(ROOT.kBlack),ROOT.RooFit.LineStyle(1))
+      self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "gaus1" ),ROOT.RooFit.Components("gaus1"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kPink+2))
+      self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "gaus2" ),ROOT.RooFit.Components("gaus2"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kRed-10))
+      self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "modelErf" ),ROOT.RooFit.Components("modelErf"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kTeal-7))
+      
+      self.legend = ROOT.TLegend(0.15010112,0.4583362,0.2502143,0.679833)
+      self.legend.SetTextSize(0.032)
+      self.legend.SetLineColor(0)
+      self.legend.SetShadowColor(0)
+      self.legend.SetLineStyle(1)
+      self.legend.SetLineWidth(1)
+      self.legend.SetFillColor(0)
+      self.legend.SetFillStyle(0)
+      self.legend.SetMargin(0.35)
+      
+      if filename.find("TT")!=-1: 
+        self.legend.AddEntry(self.frame.findObject( data ),"tt MC","ep")
+      self.legend.AddEntry( self.frame.findObject( model )," Full PDF","l")
+      if self.frame.findObject( "modelErf"):
+        self.legend.AddEntry( self.frame.findObject( "modelErf" ),"ErfExp comp.","l")
+      if self.frame.findObject( "gaus1"):
+        self.legend.AddEntry( self.frame.findObject( "gaus1" ),"Gauss 1 comp.","l")
+      if self.frame.findObject( "gaus2"):
+        self.legend.AddEntry( self.frame.findObject( "gaus2" ),"Gauss 2 comp.","l")
+        
+      self.frame_pull = self.w.var(poi).frame()
+      hpull = self.frame.pullHist(data,model,True)
+      self.frame_pull.addPlotable(hpull,"X0 P E1")
+            
+      
+      self.c = ROOT.TCanvas("c1","",800,800)
+      self.c.Divide(1,2,0,0,0)
+      self.c.cd(1)
+      p11_1 = self.c.GetPad(1)
+      p11_1.SetPad(0.01,0.26,0.99,0.98)
+      p11_1.SetRightMargin(0.05)
+      p11_1.SetTopMargin(0.1)
+      p11_1.SetBottomMargin(0.02)
+      p11_1.SetFillColor(0)
+      p11_1.SetBorderMode(0)
+      p11_1.SetFrameFillStyle(0)
+      p11_1.SetFrameBorderMode(0)
+      self.frame.GetYaxis().SetTitleSize(0.06)
+      self.frame.GetYaxis().SetTitleOffset(0.87)
+      self.frame.Draw()
+      self.frame.GetYaxis().SetTitle('Weighted MC events')
+      self.frame.GetXaxis().SetTitle(xtitle)
+      self.frame.SetTitle('')
+      self.c.Draw()
+      cmslabel_sim_prelim(p11_1,'sim',11)
+      self.legend.Draw("same")
+      addInfo = rt.TPaveText(0.8110112,0.8166292,0.8702143,0.8923546,"NDC")
+      addInfo.AddText(pavetext)
+      addInfo.SetFillColor(0)
+      addInfo.SetLineColor(0)
+      addInfo.SetFillStyle(0)
+      addInfo.SetBorderSize(0)
+      addInfo.SetTextFont(42)
+      addInfo.SetTextSize(0.040)
+      addInfo.SetTextAlign(12)
+      addInfo.Draw()
+          
+      
+      self.c.cd(2)
+      p11_2 = self.c.GetPad(2)
+      p11_2.SetPad(0.01,0.02,0.99,0.27)
+      p11_2.SetBottomMargin(0.35)
+      p11_2.SetRightMargin(0.05)
+          # p11_2.SetGridx()
+          # p11_2.SetGridy()
+      self.frame_pull.SetMinimum(-2.9)
+      self.frame_pull.SetMaximum(2.9)
+      self.frame_pull.SetTitle("")
+      self.frame_pull.SetXTitle(xtitle)
+      self.frame_pull.GetXaxis().SetTitleSize(0.06)
+      self.frame_pull.SetYTitle("#frac{MC-Fit}{#sigma_{MC}}")
+      self.frame_pull.GetYaxis().SetTitleSize(0.15)
+      self.frame_pull.GetYaxis().CenterTitle()
+      self.frame_pull.GetYaxis().SetTitleOffset(0.30)
+      self.frame_pull.GetYaxis().SetLabelSize(0.15)
+      self.frame_pull.GetXaxis().SetTitleSize(0.17)
+      self.frame_pull.GetXaxis().SetTitleOffset(0.81)
+      self.frame_pull.GetXaxis().SetLabelSize(0.12)
+      self.frame_pull.GetXaxis().SetNdivisions(906)
+      self.frame_pull.GetYaxis().SetNdivisions(305)
+      self.frame_pull.Draw("same")
+      line = rt.TLine(xmin,0,self.frame_pull.GetXaxis().GetXmax(),0)
+      line.Draw("same")
+      self.c.Update()
+          
+      self.c.SaveAs(filename)
+      
+      return self.frame.chiSquare()
+      
+          
+      
+            
+      
+      
+      
     def projection(self,model = "model",data="data",poi="x",filename="fit.root",binning=0,logy=False,xtitle='x',mass=1000):
 	    
         self.frame=self.w.var(poi).frame()
@@ -1089,16 +1215,15 @@ class Fitter(object):
                 print "No fit result found (fitresults.root), plotting model only"
 	
         if binning:
-	 self.w.data(data).plotOn(self.frame,ROOT.RooFit.Binning(binning))
-         if fr: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Binning(binning), ROOT.RooFit.DrawOption("L"), ROOT.RooFit.LineWidth(2), ROOT.RooFit.LineColor(ROOT.kRed)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
-	 else: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Binning(binning))#,ROOT.Normalization(ROOT.RooAbsReal.RelativeExpected,1.0))# ROOT.RooFit.Normalization(integral, ROOT.RooAbsReal.NumEvent))
+	 self.w.data(data).plotOn(self.frame,ROOT.RooFit.Name( data ),ROOT.RooFit.Binning(binning),ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack))
+         if fr: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.Binning(binning), ROOT.RooFit.DrawOption("L"), ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
+	 else: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.Binning(binning),ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack))#,ROOT.Normalization(ROOT.RooAbsReal.RelativeExpected,1.0))# ROOT.RooFit.Normalization(integral, ROOT.RooAbsReal.NumEvent))
 	else: 
-	 self.w.data(data).plotOn(self.frame)
-	 if fr: self.w.pdf(model).plotOn(self.frame, ROOT.RooFit.DrawOption("L"), ROOT.RooFit.LineWidth(2), ROOT.RooFit.LineColor(ROOT.kRed)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
-         else: self.w.pdf(model).plotOn(self.frame)#,ROOT.Normalization(ROOT.RooAbsReal.RelativeExpected,1.0))# ROOT.RooFit.Normalization(integral, ROOT.RooAbsReal.NumEvent))
+	 self.w.data(data).plotOn(self.frame,ROOT.RooFit.Name( data ),ROOT.RooFit.LineColor(ROOT.kBlack),ROOT.RooFit.LineStyle(1))
+	 if fr: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model), ROOT.RooFit.DrawOption("L"),ROOT.RooFit.LineStyle(1), ROOT.RooFit.LineColor(ROOT.kBlack)) #ROOT.RooFit.VisualizeError(fr, 1, ROOT.kFALSE)
+         else: self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name(model),ROOT.RooFit.LineColor(ROOT.kBlack),ROOT.RooFit.LineStyle(1))#,ROOT.Normalization(ROOT.RooAbsReal.RelativeExpected,1.0))# ROOT.RooFit.Normalization(integral, ROOT.RooAbsReal.NumEvent))
 
-        self.legend = self.getLegend()
-        self.legend.AddEntry( self.w.pdf(model)," Full PDF","l")
+        
         
         self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "signalResonanceGaus" ),ROOT.RooFit.Components("signalResonanceGaus"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kRed))#  ,ROOT.RooFit.Normalization( integral, ROOT.RooAbsReal.NumEvent))
         if self.frame.findObject( "signalResonanceGaus"):self.legend.AddEntry( self.frame.findObject( "signalResonanceGaus" ),"Gaussian","l")
@@ -1116,20 +1241,37 @@ class Fitter(object):
         if self.frame.findObject( "modelB"):self.legend.AddEntry( self.frame.findObject( "modelB" ),"BG comp.","l")
         else: print "No modelB in WS"
         
-        self.w.pdf(model).plotOn(self.frame)
+        self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "gaus1" ),ROOT.RooFit.Components("gaus1"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kPink+2))
+        self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "gaus2" ),ROOT.RooFit.Components("gaus2"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kRed-10))
+        self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.Name( "modelErf" ),ROOT.RooFit.Components("modelErf"),ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kTeal-7))
+        
+        
+        
+        #Draw full pdf again
+        self.w.pdf(model).plotOn(self.frame,ROOT.RooFit.LineStyle(1),ROOT.RooFit.LineColor(ROOT.kBlack))
+        
+        self.legend = self.getLegend()
+        if filename.find("TT")!=-1: self.legend.AddEntry(self.frame.findObject( data ),"tt MC","ep")
+        self.legend.AddEntry( self.frame.findObject( model )," Full PDF","l")
+        if self.frame.findObject( "modelErf"):self.legend.AddEntry( self.frame.findObject( "modelErf" ),"ErfExp comp.","l")
+        if self.frame.findObject( "gaus1"):self.legend.AddEntry( self.frame.findObject( "gaus1" ),"Gauss 1 comp.","l")
+        if self.frame.findObject( "gaus2"):self.legend.AddEntry( self.frame.findObject( "gaus2" ),"Gauss 2 comp.","l")
+        
         self.c=ROOT.TCanvas("c","c")
+        self.frame.SetMinimum(0.0)
+        #self.frame.SetMaximum(2.0)
         if logy:
           self.frame.SetMinimum(0.00001)
-          self.frame.SetMaximum(1.0)
+          self.frame.SetMaximum(1.8)
           self.c.SetLogy()
         self.c.cd()
         self.frame.Draw()
-        self.frame.GetYaxis().SetTitle('events')
+        self.frame.GetYaxis().SetTitle('Weighted MC events')
         self.frame.GetXaxis().SetTitle(xtitle)
         self.frame.SetTitle('')
         self.c.Draw()
-
-        self.legend.Draw("same")	    
+        cmslabel_sim_prelim(self.c,'sim',11)
+        self.legend.Draw("same")	 
         self.c.SaveAs(filename)
         pullDist = self.frame.pullHist()
         return self.frame.chiSquare()

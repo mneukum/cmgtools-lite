@@ -18,6 +18,7 @@ class AllFunctions():
   self.lumi = parameters[12]
   self.submitToBatch = parameters[13]
 
+
   self.printAllParameters()
   
  def makeSignalShapesMVV(self,filename,template,fixParsMVV,addcuts="1"):
@@ -26,7 +27,7 @@ class AllFunctions():
   ##the parameters to be fixed should be optimized
   rootFile=filename+"_MVV.root" # this is the file that is missing
   fixPars = fixParsMVV["fixPars"]  
-  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"'.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts)
+  cmd='vvMakeSignalMVVShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_LV_mass" --fix "{fixPars}"   -m {minMVV} -M {maxMVV} --minMX {minMX} --maxMX {maxMX} {samples} --addcut "{addcut}"'.format(template=template,cut=cut,rootFile=rootFile,minMVV=self.minMVV,maxMVV=self.maxMVV,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars,samples=self.samples,addcut=addcuts,binsMVV=self.HCALbinsMVV)
   print "the vvMakeSignalMVVShapes.py command for debugging:"
   print cmd
   os.system(cmd)
@@ -37,21 +38,31 @@ class AllFunctions():
   os.system(cmd)
 
  def makeSignalShapesMJ(self,filename,template,leg,fixPars,addcuts="1"):
-
-  for c in self.categories:
+   # for now remove the category part from these fits -> left code in until we have green light from all
+   VBF=False
+   nominal=False
+   for c in self.categories:
+      if 'VBF' in c: VBF = True
+      else: nominal = True
   
-   if 'VBF' in c: cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],addcuts])
-   else: cut='*'.join([self.cuts['common_VV'],self.cuts[c],addcuts])
-     
-   rootFile=filename+"_MJ"+leg+"_"+c+".root"   
-   cmd='vvMakeSignalMJShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_{leg}_softDrop_mass" -m {minMJ} -M {maxMJ} -f "{fixPars}" --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template,cut=cut,rootFile=rootFile,leg=leg,minMJ=self.minMJ,maxMJ=self.maxMJ,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars[c.replace('VBF_','')]["fixPars"],samples=self.samples)
-   os.system(cmd)
-   
-   jsonFile=filename+"_MJ"+leg+"_"+c+".json"   
-   cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixPars[c.replace('VBF_','')]["pol"])
-   os.system(cmd)
+   #if 'VBF' in c: cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],addcuts])
+   #else: cut='*'.join([self.cuts['common_VV'],self.cuts[c],addcuts])
+   cuts = []
+   if VBF== True: cuts.append('*'.join([self.cuts['common_VBF'],addcuts]))
+   if nominal == True: cuts.append('*'.join([self.cuts['common_VV'],addcuts]))
+    
+   for cut in cuts: 
+    #rootFile=filename+"_MJ"+leg+"_"+c+".root"
+    rootFile=filename+"_MJ"+leg+"_NP.root" 
+    cmd='vvMakeSignalMJShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_{leg}_softDrop_mass" -m {minMJ} -M {maxMJ} -f "{fixPars}" --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template,cut=cut,rootFile=rootFile,leg=leg,minMJ=self.minMJ,maxMJ=self.maxMJ,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars["NP"]["fixPars"],samples=self.samples)
+    os.system(cmd)
+    
+    #jsonFile=filename+"_MJ"+leg+"_"+c+".json"
+    jsonFile=filename+"_MJ"+leg+"_NP.json"
+    cmd='vvMakeJSON.py  -o "{jsonFile}" -g {pols} -m {minMX} -M {maxMX} {rootFile}  '.format(jsonFile=jsonFile,rootFile=rootFile,minMX=self.minMX,maxMX=self.maxMX,pols=fixPars["NP"]["pol"])
+    os.system(cmd)
 
- def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0}):
+ def makeSignalYields(self,filename,template,branchingFraction,sfP = {'HPHP':1.0,'HPLP':1.0,'LPLP':1.0},functype="pol5"):
  
   print "using the following scalfactors:" ,sfP
   
@@ -59,7 +70,7 @@ class AllFunctions():
    if 'VBF' in c: cut = "*".join([self.cuts[c.replace('VBF_','')],self.cuts['common_VBF'],self.cuts['acceptance'],str(sfP[c.replace('VBF_','')])])
    else: cut = "*".join([self.cuts[c],self.cuts['common_VV'],self.cuts['acceptance'],str(sfP[c])])
    yieldFile=filename+"_"+c+"_yield"
-   fnc = "pol7"
+   fnc = functype
    cmd='vvMakeSignalYields.py -s {template} -c "{cut}" -o {output} -V "jj_LV_mass" -m {minMVV} -M {maxMVV} -f {fnc} -b {BR} --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template, cut=cut, output=yieldFile,minMVV=self.minMVV,maxMVV=self.maxMVV,fnc=fnc,BR=branchingFraction,minMX=self.minMX,maxMX=self.maxMX,samples=self.samples)
    os.system(cmd)
 
@@ -231,6 +242,21 @@ class AllFunctions():
      print str(cmd)
      os.system(cmd)
 
+ def fitTT(self,filename,template,xsec=1):
+   for c in self.categories:
+     print("\r"+"Fitting ttbar in category %s" %c)
+     if 'VBF' in c: 
+       cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],self.cuts['acceptance']])
+     else: 
+       cut='*'.join([self.cuts['common_VV'],self.cuts[c],self.cuts['acceptance']])
+     outname=filename+"_"+c
+     pwd = os.getcwd()
+     directory=pwd+"/"+self.samples
+     fixPars="1" 
+     cmd='vvMakeTTShapes.py -s "{template}" -c "{cut}"  -o "{outname}" -m {minMJ} -M {maxMJ} --store "{filename}_{purity}.py" --minMVV {minMVV} --maxMVV {maxMVV} {addOption} --corrFactor {xsec} {samples} {lumi}'.format(template=template,cut=cut,outname=outname,minMJ=self.minMJ,maxMJ=self.maxMJ,filename=filename,purity=c,minMVV=self.minMVV,maxMVV=self.maxMVV,addOption="",xsec=xsec, samples=directory,lumi=self.lumi)
+     cmd+=self.HCALbinsMVV
+     os.system(cmd)
+     
 
  #this one I still have to fix and test, do not use submitToBatch yet
  def mergeKernelJobs(self,name,filename):

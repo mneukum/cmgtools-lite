@@ -25,6 +25,7 @@ def getBinning(binsMVV):
 
 useCondorBatch = True
 runinKA = True
+>>>>>>> c4441bb1ae55323a7164d43249032ffa8b00b9cc
 
 def makeSubmitFileCondor(exe,jobname,jobflavour):
     print "make options file for condor job submission "
