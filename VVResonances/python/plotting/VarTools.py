@@ -2,6 +2,8 @@ import ROOT
 import copy
 import sys
 
+
+# function to extract string from function -> in order write a proper json file
 def returnString(func,ftype):
     if func.GetName().find("corr")!=-1:
         st = "("+str(func.GetParameter(0))+" + ("+str(func.GetParameter(1))+")*MJ1 + ("+str(func.GetParameter(2))+")*MJ2  + ("+str(func.GetParameter(3))+")*MJ1*MJ2)"
@@ -60,3 +62,4 @@ def returnString(func,ftype):
             return st
         else:
             return ""
+

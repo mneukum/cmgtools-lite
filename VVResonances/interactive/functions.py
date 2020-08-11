@@ -93,11 +93,12 @@ class AllFunctions():
   pwd = os.getcwd()
   
   for c in self.categories:
-  
+   
    jobname = jobName+"_"+c
    print "Working on purity: ", c
-   
-   resFile=filename+"_nonRes_detectorResponse.root"
+   filename_det = filename
+   filename_det = "JJ_2016"
+   resFile=filename_det+"_nonRes_detectorResponse.root"
    print "Reading " ,resFile
 
    rootFile = filename+"_"+name+"_MVV_"+c+".root"
