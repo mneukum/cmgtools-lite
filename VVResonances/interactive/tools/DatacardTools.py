@@ -166,32 +166,25 @@ class DatacardTools():
     print "add TT+jets background"  
     contrib =["resT","resW","nonresT","resTnonresT","resWnonresT","resTresW"]
     for i in range(0,len(contrib)):
-       #load mJJ - assume same for the three contributions (preliminary)
        print "load ", rootFileMVV[contrib[i]], " for ttbar contribution"
        f = ROOT.TFile(rootFileMVV[contrib[i]],"READ")
-       #h = f.Get("histo_nominal")
-       #c = ROOT.TCanvas("c","c",400,400)
-       #h.Draw()
-       #c.SetLogy()
-       #c.SaveAs(contrib[i]+".pdf")
-       card.addHistoShapeFromFile("TTJets"+contrib[i]+"_mjj",["MJJ"],rootFileMVV[contrib[i]],"histo_nominal",["PT:CMS_VV_JJ_TTJets"+contrib[i]+"_PTZ","OPT:CMS_VV_JJ_TTJets"+contrib[i]+"_OPTZ"],False,0)       
-
+       card.addHistoShapeFromFile("TTJets"+contrib[i]+"_mjj",["MJJ"],rootFileMVV[contrib[i]],"histo_nominal",["PT:CMS_VV_JJ_TTJets_PTZ_"+category],False,0)       
     
     card.addMJJTTJetsParametricShapeResW("TTJetsW_mjetRes_l1","MJ1",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.},self.scales[dataset])#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
     card.addMJJTTJetsParametricShapeResW("TTJetsW_mjetRes_l2","MJ2",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.},self.scales[dataset])#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
     
-    card.addMJJTTJetsParametricShapeResT("TTJetsTop_mjetRes_l1","MJ1",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
-    card.addMJJTTJetsParametricShapeResT("TTJetsTop_mjetRes_l2","MJ2",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
+    card.addMJJTTJetsParametricShapeResT("TTJetsTop_mjetRes_l1","MJ1",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj_top':1.},{'CMS_res_prunedj_top':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
+    card.addMJJTTJetsParametricShapeResT("TTJetsTop_mjetRes_l2","MJ2",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj_top':1.},{'CMS_res_prunedj_top':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
     
     card.addMJJTTJetsParametricShapeNonRes("TTJetsNonRes_mjetRes_l1","MJ1",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
     card.addMJJTTJetsParametricShapeNonRes("TTJetsNonRes_mjetRes_l2","MJ2",resultsDir+"/JJ_%s_TTJets_%s.json"%(dataset,category),{'CMS_scale_prunedj':1.},{'CMS_res_prunedj':1.})#,{'CMS_f_g1':1.},{'CMS_f_res':1.})
     
     # built final PDFs:
     # W+W PDF
-    card.product3D('TTJetsW','TTJetsresW_mjj','TTJetsW_mjetRes_l1','TTJetsW_mjetRes_l2')
+    card.conditionalProduct3('TTJetsW','TTJetsresW_mjj','TTJetsW_mjetRes_l1','TTJetsW_mjetRes_l2','MJJ')
 
     #T+T PDF
-    card.product3D('TTJetsTop','TTJetsresT_mjj','TTJetsTop_mjetRes_l1','TTJetsTop_mjetRes_l2')
+    card.conditionalProduct3('TTJetsTop','TTJetsresT_mjj','TTJetsTop_mjetRes_l1','TTJetsTop_mjetRes_l2','MJJ')
 
     #nonRes+nonRes PDF
     card.conditionalProduct3('TTJetsNonRes','TTJetsnonresT_mjj','TTJetsNonRes_mjetRes_l1','TTJetsNonRes_mjetRes_l2','MJJ')
@@ -201,8 +194,7 @@ class DatacardTools():
     #nonresT + resT
     card.conditionalProduct3('TTJetsnonresTresT','TTJetsresTnonresT_mjj','TTJetsNonRes_mjetRes_l1','TTJetsTop_mjetRes_l2','MJJ')
     card.sumPdf('TTJetsTNonResT','TTJetsTnonresT','TTJetsnonresTresT',"CMS_ratio_const")
-    
-    
+        
     #resW + nonresT
     card.conditionalProduct3('TTJetsWnonresT','TTJetsresWnonresT_mjj','TTJetsW_mjetRes_l1','TTJetsNonRes_mjetRes_l2','MJJ')
     #nonresT + resW
@@ -210,9 +202,9 @@ class DatacardTools():
     card.sumPdf('TTJetsWNonResT','TTJetsWnonresT','TTJetsnonresTresW',"CMS_ratio_const")
     
     #resW + resT
-    card.product3D('TTJetsresWresT','TTJetsresTresW_mjj','TTJetsW_mjetRes_l1','TTJetsTop_mjetRes_l2')
+    card.conditionalProduct3('TTJetsresWresT','TTJetsresTresW_mjj','TTJetsW_mjetRes_l1','TTJetsTop_mjetRes_l2','MJJ')
     #resT + resW 
-    card.product3D('TTJetsresTresW','TTJetsresTresW_mjj','TTJetsTop_mjetRes_l1','TTJetsW_mjetRes_l2')
+    card.conditionalProduct3('TTJetsresTresW','TTJetsresTresW_mjj','TTJetsTop_mjetRes_l1','TTJetsW_mjetRes_l2','MJJ')
     card.sumPdf('TTJetsResWResT','TTJetsresWresT','TTJetsresTresW',"CMS_ratio_const")
     
        
@@ -227,13 +219,12 @@ class DatacardTools():
         card.addFixedYieldFromFile('TTJetsWnonresT',ncontrib+5,rootFileNorm["resWnonresT"],"TTJetsWnonresT",0.000001/2.)
         card.addFixedYieldFromFile('TTJetsnonresTresW',ncontrib+6,rootFileNorm["resWnonresT"],"TTJetsnonresTresW",0.000001/2.)
     else: 
-        card.addConstrainedYieldFromFile('TTJetsW',ncontrib,rootFileNorm["resW"],"TTJets",'CMS_VV_JJ_TTJetsW_norm',0.2,1.)
-        card.addConstrainedYieldFromFile('TTJetsTop',ncontrib+1,rootFileNorm["resT"],"TTJets",'CMS_VV_JJ_TTJetsTop_norm',2.2,1.)
-        card.addConstrainedYieldFromFile('TTJetsNonRes',ncontrib+2,rootFileNorm["nonresT"],"TTJets",'CMS_VV_JJ_TTJetsNonRes_norm',2.2,1.)
-        card.addConstrainedYieldFromFile('TTJetsWNonResT',ncontrib+3,rootFileNorm["resWnonresT"],"TTJets",'CMS_VV_JJ_TTJetsWNonResT_norm',2.2,1.)
-        card.addConstrainedYieldFromFile('TTJetsResWResT',ncontrib+4,rootFileNorm["resWresT"],"TTJets",'CMS_VV_JJ_TTJetsResWResT_norm',2.2,1.)
-        card.addConstrainedYieldFromFile('TTJetsTNonResT',ncontrib+5,rootFileNorm["resTnonresT"],"TTJets",'CMS_VV_JJ_TTJetsTNonResT_norm',2.2,1.)
-
+	card.addFixedYieldFromFile('TTJetsW',ncontrib,rootFileNorm["resW"],"TTJets")
+        card.addFixedYieldFromFile('TTJetsTop',ncontrib+1,rootFileNorm["resT"],"TTJets")
+        card.addFixedYieldFromFile('TTJetsNonRes',ncontrib+2,rootFileNorm["nonresT"],"TTJets")
+        card.addFixedYieldFromFile('TTJetsWNonResT',ncontrib+3,rootFileNorm["resWnonresT"],"TTJets")
+        card.addFixedYieldFromFile('TTJetsResWResT',ncontrib+4,rootFileNorm["resWresT"],"TTJets")
+        card.addFixedYieldFromFile('TTJetsTNonResT',ncontrib+5,rootFileNorm["resTnonresT"],"TTJets")
 	          
  def AddWResBackground(self,card,dataset,category,rootFileMVV,rootFileNorm,resultsDir,ncontrib):
        print "add Wres background"  
@@ -328,19 +319,23 @@ class DatacardTools():
 
  #with old implementation 
  def AddTTSystematics3(self,card,sig,dataset,category):
-    card.addSystematic("CMS_f_g1","param",[0.0,0.02])
-    card.addSystematic("CMS_f_res","param",[0.0,0.08])
-    #card.addSystematic("CMS_VV_JJ_TTJets_norm","lnN",{'TTJets':1.2})  
-    card.addSystematic("CMS_VV_JJ_TTJetsTop_PTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsTop_OPTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsW_PTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsW_OPTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsNonRes_PTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsNonRes_OPTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsTnonresT_PTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsTnonresT_OPTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsWnonresT_PTZ_"+category,"param",[0,0.333]) #0.333
-    card.addSystematic("CMS_VV_JJ_TTJetsWnonresT_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_f_g1","param",[0.0,0.02])
+    #card.addSystematic("CMS_f_res","param",[0.0,0.08])
+    card.addSystematic("CMS_scale_prunedj_top","param",[0.0,0.02])
+    card.addSystematic("CMS_res_prunedj_top","param",[0.0,0.08])
+    card.addSystematic("CMS_VV_JJ_TTJets_norm","lnN",{'TTJetsW':1.2,'TTJetsTop':1.2,'TTJetsNonRes':1.2,'TTJetsWNonResT':1.2,'TTJetsResWResT':1.2,'TTJetsTNonResT':1.2})  
+    card.addSystematic("CMS_VV_JJ_TTJets_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJets_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsTop_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsTop_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsW_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsW_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsNonRes_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsNonRes_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsTnonresT_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsTnonresT_OPTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsWnonresT_PTZ_"+category,"param",[0,0.333]) #0.333
+    #card.addSystematic("CMS_VV_JJ_TTJetsWnonresT_OPTZ_"+category,"param",[0,0.333]) #0.333
        
  def AddSigSystematics(self,card,sig,dataset,category,correlate):
 
@@ -351,7 +346,8 @@ class DatacardTools():
 
       card.addSystematic("CMS_pdf","lnN",{'%s'%sig:1.01})    
       if correlate:
-       card.addSystematic("CMS_lumi","lnN",{'%s'%sig:self.lumi_unc[dataset],"Wjets":self.lumi_unc[dataset],"Zjets":self.lumi_unc[dataset]})   
+       card.addSystematic("CMS_lumi","lnN",{'%s'%sig:self.lumi_unc[dataset],"Wjets":self.lumi_unc[dataset],"Zjets":self.lumi_unc[dataset],
+                                            'TTJetsW':self.lumi_unc[dataset],'TTJetsTop':self.lumi_unc[dataset],'TTJetsNonRes':self.lumi_unc[dataset],'TTJetsWNonResT':self.lumi_unc[dataset],'TTJetsResWResT':self.lumi_unc[dataset],'TTJetsTNonResT':self.lumi_unc[dataset]})   
       else: 
        card.addSystematic("CMS_lumi","lnN",{'%s'%sig:self.lumi_unc[dataset]})
       

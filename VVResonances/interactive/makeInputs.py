@@ -54,9 +54,7 @@ if useTriggerWeights:
     
 #all categories
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP','VBF_VV_HPHP','VBF_VV_HPLP']
-categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP']
-#categories =["NP"]
-#categories =["VH_HPLP"]
+categories=['VH_NPHP_control_region']
        
 #list of signal samples --> nb, radion and vbf samples to be added
 BulkGravWWTemplate="BulkGravToWW_"
@@ -171,7 +169,7 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
 
     if options.run.find("all")!=-1 or options.run.find("norm")!=-1:
         print "fit signal norm "
-        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag},"pol2")
+        f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag,'VH_NPHP_control_region':ctx.HPSF_vtag*ctx.LPSF_vtag},"pol2")
         f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,ctx.cuts['nonres'],"sig")
         f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,ctx.cuts['nonres'],"sig")
 
@@ -203,25 +201,24 @@ if options.run.find("all")!=-1 or options.run.find("qcd")!=-1:
         f.makeNormalizations("nonRes","JJ_"+str(period),nonResTemplate,0,ctx.cuts['nonres'],"nRes")
 
 if options.run.find("all")!=-1 or options.run.find("vjets")!=-1:    
-    #print "for V+jets"
-    #print "first we fit"
-    #f.fitVJets("JJ_WJets",resTemplate,1.,1.)
-    #print "and then we make kernels"
-    #print " did you run Detector response  for this period? otherwise the kernels steps will not work!"
-    #print "first kernel W"
-    #f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
-    #print "then kernel Z"
-    #f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
-    #print "then norm W"
-    #f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
-    #print "then norm Z"
-    #f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
-    f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,ctx.cuts['nonres'],"nRes","") # ... so we do not need this
-
-
+    print "for V+jets"
+    print "first we fit"
+    f.fitVJets("JJ_WJets",resTemplate,1.,1.)
+    print "and then we make kernels"
+    print " did you run Detector response  for this period? otherwise the kernels steps will not work!"
+    print "first kernel W"
+    f.makeBackgroundShapesMVVKernel("WJets","JJ_"+str(period),WresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    print "then kernel Z"
+    f.makeBackgroundShapesMVVKernel("ZJets","JJ_"+str(period),ZresTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    print "then norm W"
+    f.makeNormalizations("WJets","JJ_"+str(period),WresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
+    print "then norm Z"
+    f.makeNormalizations("ZJets","JJ_"+str(period),ZresTemplate,0,ctx.cuts['nonres'],"nRes","",ctx.HPSF_vtag,ctx.LPSF_vtag)
+    #f.makeNormalizations("TTJets","JJ_"+str(period),TTemplate,0,ctx.cuts['nonres'],"nRes","") # ... so we do not need this
+    
 if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
-    #f.fitTT   ("JJ_%s_TTJets"%(period),TTemplate,1.,)
-    #print "resT"
+    f.fitTT   ("JJ_%s_TTJets"%(period),TTemplate,1.,)
+    print "resT"
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_resT"+str(period),TTemplate,ctx.cuts['resTT'],"1D",0,1.,1.)
     f.makeNormalizations("TTJets","JJ_resT"+str(period),TTemplate,0,ctx.cuts['resTT'],"nRes","")
     print "resW"
@@ -229,7 +226,7 @@ if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
     f.makeNormalizations("TTJets","JJ_resW"+str(period),TTemplate,0,ctx.cuts['resTT_W'],"nRes","")
     print "nonres"
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_nonresT"+str(period),TTemplate,ctx.cuts['nonresTT'],"1D",0,1.,1.)
-    f.makeNormalizations("TTJets","JJ_nonresTT"+str(period),TTemplate,0,ctx.cuts['nonresTT'],"nRes","")
+    f.makeNormalizations("TTJets","JJ_nonresT"+str(period),TTemplate,0,ctx.cuts['nonresTT'],"nRes","")
     print "resTresW"
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_resTresW"+str(period),TTemplate,ctx.cuts['resTresW'],"1D",0,1.,1.)
     f.makeNormalizations("TTJets","JJ_resTresW"+str(period),TTemplate,0,ctx.cuts['resTresW'],"nRes","")
@@ -239,23 +236,29 @@ if options.run.find("all")!=-1 or options.run.find("tt")!=-1:
     print "resWnonresT"
     f.makeBackgroundShapesMVVKernel("TTJets","JJ_resWnonresT"+str(period),TTemplate,ctx.cuts['resWnonresT'],"1D",0,1.,1.)
     f.makeNormalizations("TTJets","JJ_resWnonresT"+str(period),TTemplate,0,ctx.cuts['resWnonresT'],"nRes","")
-    f.makeNormalizations("TTJets","JJ_nonresT"+str(period),TTemplate,0,ctx.cuts['nonresTT'],"nRes","")
-    f.makeBackgroundShapesMVVKernel("TTJets","JJ_"+str(period),TTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
-  
+    print "Full TTJets shape and normalization"
+    f.makeBackgroundShapesMVVKernel("TTJets","JJ_all_"+str(period),TTemplate,ctx.cuts['nonres'],"1D",0,1.,1.)
+    f.makeNormalizations("TTJets","JJ_all_"+str(period),TTemplate,0,ctx.cuts['nonres'],"nRes","")
+    
 if options.run.find("all")!=-1 or options.run.find("data")!=-1:
     print " Do data "
     f.makeNormalizations("data","JJ_"+str(period),dataTemplate,1,'1',"normD") #run on data. Currently run on pseudodata only (below)
 if options.run.find("all")!=-1 or options.run.find("pseudoNOVJETS")!=-1:
     print " Do pseudodata without vjets"
     from modules.submitJobs import makePseudoData
-    for p in categories: makePseudoData("JJ_"+str(period)+"_nonRes_%s.root"%p,"save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDnoVjets_%s.root"%p,lumi)
+    for p in categories: makePseudoData("JJ_"+str(period)+"_nonRes_%s.root"%p,"save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDnoVjets_%s.root"%p,ctx.lumi)
 if options.run.find("all")!=-1 or options.run.find("pseudoVJETS")!=-1:
     print " Do pseudodata with vjets: DID YOU PRODUCE THE WORKSPACE BEFORE???"
     from modules.submitJobs import makePseudoDataVjets
-    for p in categories: makePseudoDataVjets("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDVjets_%s.root"%p,lumi,"results_"+str(period)+"/workspace_JJ_BulkGWW_"+p+"_13TeV_"+str(period)+"_VjetsPrep.root",period,p)
+    for p in categories: makePseudoDataVjets("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PDVjets_%s.root"%p,ctx.lumi,"results_"+str(period)+"/workspace_JJ_BulkGWW_"+p+"_13TeV_"+str(period)+"_VjetsPrep.root",period,p)
 if options.run.find("all")!=-1 or options.run.find("pseudoALL")!=-1:
-    print " Do pseudodata. DID YOU PRODUCE THE WORKSPACE BEFORE???"
+    print " Do pseudodata with vjets: DID YOU PRODUCE THE WORKSPACE BEFORE???"
     from modules.submitJobs import makePseudoDataVjetsTT
-    for p in categories: makePseudoDataVjetsTT("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,"results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,"pythia","JJ_PD_%s.root"%p,lumi,"workspace_JJ_ZprimeZH_%s_13TeV_%sZprimeZH.root"%(p,str(period)),period,p)
+    for p in categories: makePseudoDataVjetsTT("results_"+str(period)+"/JJ_"+str(period)+"_nonRes_%s.root"%p,
+                                               "JJ_all_"+str(period)+"_TTJets_"+p+".root",
+					       "results_"+str(period)+"/save_new_shapes_"+str(period)+"_pythia_%s_3D.root"%p,
+					       "pythia","JJ_PDALL_%s.root"%p,ctx.lumi,
+					       "results_"+str(period)+"/workspace_JJ_BulkGWW_"+p+"_13TeV_"+str(period)+".root",
+					       period,p)
 
 print " ########## I did everything I could! ###### "

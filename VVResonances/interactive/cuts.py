@@ -235,6 +235,11 @@ class cuts():
                 self.cuts['VH_all'] =  '('+  '||'.join([self.cuts['VH_HPHP'],self.cuts['VH_LPHP'],self.cuts['VH_HPLP']]) + ')'
 
                 self.cuts['VV_HPLP'] = '(' +'('+'!'+self.cuts['VH_all']+') &&' + '(' + '('+  '&&'.join([self.catVtag['HP1'],self.catVtag['LP2']]) + ')' + '||' + '(' + '&&'.join([self.catVtag['HP2'],self.catVtag['LP1']]) + ')' + ')' + ')'
+
+                #control region (invert w-tag)
+                catsAll['VH_NPHP'] = '('+'&&'.join([self.catVtag['NP1'],self.catHtag['HP2']])+')'
+                catsAll['HV_HPNP'] = '('+'&&'.join([self.catHtag['HP1'],self.catVtag['NP2']])+')'
+                self.cuts['VH_NPHP_control_region'] = '('+'||'.join([catsAll['VH_NPHP'],catsAll['HV_HPNP'],catsAll['HH_HPHP']])+')'
             else:
                 print "Use b-tagging sorting"
                 self.cuts['VH_HPHP'] = '('+  '&&'.join([self.catHtag['HP1'],self.catVtag['HP2']]) + ')'

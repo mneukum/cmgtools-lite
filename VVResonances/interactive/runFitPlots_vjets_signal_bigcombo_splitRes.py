@@ -6,7 +6,7 @@ from array import array
 import math
 import CMS_lumi
 import numpy as np
-from tools import PostFitTools
+from tools import Postfitplotter
 ROOT.gErrorIgnoreLevel = ROOT.kWarning
 ROOT.gROOT.ProcessLine(".x tdrstyle.cc");
 
@@ -35,7 +35,7 @@ parser.add_option("-s","--signal",dest="fitSignal",action="store_true",help="do 
 parser.add_option("-t","--addTop",dest="addTop",action="store_true",help="Fit top",default=False)
 parser.add_option("-M","--mass",dest="signalMass",type=float,help="signal mass",default=1560.)
 parser.add_option("--signalScaleF",dest="signalScaleF",type=float,help="scale factor to apply to signal when drawing so its still visible!",default=100.)
-parser.add_option("--prelim",dest="prelim",type=int,help="add preliminary label",default=0)
+parser.add_option("--prelim",dest="prelim",help="add extra text CMS label",default="Preliminary")
 parser.add_option("--channel",dest="channel",help="which category to use? ",default="VV_HPHP")
 parser.add_option("--doFit",dest="fit",action="store_true",help="actually fit the the distributions",default=False)
 parser.add_option("-v","--doVjets",dest="doVjets",action="store_true",help="Fit top",default=False)
@@ -150,20 +150,21 @@ if __name__=="__main__":
         print "Observed number of events in",purity,"category:"
         print data[year].sumEntries() ,"   ("+year+")"
         expected = {}
+	N_expected_tot = 0
         for bkg in bkgs:
             if options.doVjets==False and (bkg=="Wjets" or bkg=="Zjets"): expected[bkg] = [None,None]; continue
             if options.addTop==False and (bkg.find("TTJets")!=-1): expected[bkg] = [None,None]; continue
             expected[bkg] = [ (args[pdf1Name[year]].getComponents())["n_exp_binJJ_"+purity+"_13TeV_"+year+"_proc_"+bkg],0.]
             print "Expected number of "+bkg+" events:",(expected[bkg][0].getVal()),"   ("+year+")"
+	    N_expected_tot += (expected[bkg][0].getVal())
         all_expected[year] = expected 
         if options.fitSignal:
             print "Expected signal yields:",(args[pdf1Name[year]].getComponents())["n_exp_final_binJJ_"+purity+"_13TeV_2016_proc_"+signalName].getVal(),"(",year,")"
             signal_expected[year] = [ (args[pdf1Name[year]].getComponents())["n_exp_final_binJJ_"+purity+"_13TeV_2016_proc_"+signalName], 0.]
         else: signal_expected[year] = [0.,0.]
         print 
-     
    
-        
+        print "Total number of expected background events:",N_expected_tot,"--> data/bkg =",data[year].sumEntries()/N_expected_tot,"(",year,")"
      ################################################# do the fit ###################################
      print
      
@@ -206,10 +207,10 @@ if __name__=="__main__":
         print "Full "+year+" post-fit pdf:"     
         allpdfs[year].append( args[pdf1Name[year]+"_nuis"])
         allpdfs[year][-1].Print()
-		    
-     allpdfsz = PostFitTools.definefinalPDFs(options,"z",allpdfs)
-     allpdfsx = PostFitTools.definefinalPDFs(options,"x",allpdfs)
-     allpdfsy = PostFitTools.definefinalPDFs(options,"y",allpdfs)
+	
+     allpdfsz = Postfitplotter.definefinalPDFs(options,"z",allpdfs)
+     allpdfsx = Postfitplotter.definefinalPDFs(options,"x",allpdfs)
+     allpdfsy = Postfitplotter.definefinalPDFs(options,"y",allpdfs)
      
      if options.fit:
         for year in years:
@@ -229,8 +230,8 @@ if __name__=="__main__":
           	 	 	
          
      logfile = open(options.output+options.log,"a::ios::ate")
-     forplotting = PostFitTools.Postfitplotter(options,logfile,signalName)
-     forproj = PostFitTools.Projection(hinMC,[options.xrange,options.yrange,options.zrange], workspace,options.fit)
+     forplotting = Postfitplotter.Postfitplotter(options,logfile,signalName)
+     forproj = Postfitplotter.Projection(hinMC,[options.xrange,options.yrange,options.zrange], workspace,options.fit)
      #make projections onto MJJ axis 
      if options.projection =="z":
          results = []

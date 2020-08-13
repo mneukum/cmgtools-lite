@@ -6,6 +6,7 @@ from array import array
 ROOT.gErrorIgnoreLevel = ROOT.kWarning
 ROOT.gROOT.ProcessLine(".x tdrstyle.cc");
 import math, copy
+import cuts
 from tools.PostFitTools import *
 from tools.DatacardTools import *
 from CMGTools.VVResonances.statistics.DataCardMaker import DataCardMaker
@@ -379,19 +380,21 @@ def makeNonResCard():
  elif options.pdfIn.find("VH_HPHP")!=-1: category_pdf = "VH_HPHP" 
  elif options.pdfIn.find("VH_HPLP")!=-1: category_pdf = "VH_HPLP"
  elif options.pdfIn.find("VH_LPHP")!=-1: category_pdf = "VH_LPHP"
+ elif options.pdfIn.find("NP")!=-1: category_pdf = "NP"
  else: category_pdf = "VV_LPLP"  
-
+ 
  dataset = options.year
  sig = 'BulkGWW' 
  doCorrelation = False
  if 'VBF' in purity: sig = 'VBF_BulkGWW'
  
+ '''
  lumi = {'2016':35900,'2017':41367}
  lumi_unc = {'2016':1.025,'2017':1.023}
  scales = {"2017" :[0.983,1.08], "2016":[1.014,1.086]}
  scalesHiggs = {"2017" :[1.,1.], "2016":[1.,1.]}
 
- vtag_unc = {'VV_HPHP':{},'VV_HPLP':{},'VV_LPLP':{},'VH_HPHP':{},'VH_HPLP':{},'VH_LPHP':{} }
+ vtag_unc = {'VV_HPHP':{},'VV_HPLP':{},'VV_LPLP':{},'VH_HPHP':{},'VH_HPLP':{},'VH_LPHP':{}, 'VH_NPHP_control_region': {}}
  vtag_unc['VV_HPHP'] = {'2016':'1.232/0.792','2017':'1.269/0.763'}
  vtag_unc['VV_HPLP'] = {'2016':'0.882/1.12','2017':'0.866/1.136'}    
  vtag_unc['VV_LPLP'] = {'2016':'1.063','2017':'1.043'}
@@ -402,11 +405,31 @@ def makeNonResCard():
  vtag_unc['VH_HPHP'] = {'2016':'1.232/0.792','2017':'1.269/0.763'}
  vtag_unc['VH_HPLP'] = {'2016':'0.882/1.12','2017':'0.866/1.136'}    
  vtag_unc['VH_LPHP'] = {'2016':'1.063','2017':'1.043'}
+ vtag_unc['VH_NPHP_control_region'] = {'2016':'1.232/0.792','2017':'1.269/0.763'}
+ #vtag_pt_dependence = {'VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))',
+ #                      'VBF_VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VBF_VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))',
+ #		       'VH_NPHP_control_region':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))'}
 
- vtag_pt_dependence = {'VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))',
-                       'VBF_VV_HPHP':'((1+0.06*log(MH/2/300))*(1+0.06*log(MH/2/300)))','VBF_VV_HPLP':'((1+0.06*log(MH/2/300))*(1+0.07*log(MH/2/300)))'}
+ vtag_pt_dependence = {"2016" : ctx16.vtag_pt_dependence,"2017" : ctx17.vtag_pt_dependence,"2018" : ctx18.vtag_pt_dependence}
+ '''
 
- DTools = DatacardTools(scales,scalesHiggs,vtag_pt_dependence,lumi_unc,vtag_unc,1.0,"","",doCorrelation)
+ sig = 'BulkGWW' 
+ doCorrelation = False
+ if 'VBF' in purity: sig = 'VBF_BulkGWW'
+
+ dataset = str(options.year)
+ ctx16 = cuts.cuts("init_VV_VH.json",2016,"dijetbins_random")
+ ctx17 = cuts.cuts("init_VV_VH.json",2017,"dijetbins_random")
+ ctx18 = cuts.cuts("init_VV_VH.json",2018,"dijetbins_random") 
+
+ lumi = {'2016':ctx16.lumi,'2017':ctx17.lumi, '2018':ctx18.lumi}
+ lumi_unc = {'2016':ctx16.lumi_unc,'2017':ctx17.lumi_unc, '2018':ctx18.lumi_unc}
+ vtag_pt_dependence = {"2016" : ctx16.vtag_pt_dependence,"2017" : ctx17.vtag_pt_dependence,"2018" : ctx18.vtag_pt_dependence}
+
+ scales = {"2017" :[1,1], "2016":[1,1], "2018":[1,1]}
+ scalesHiggs = {"2017" :[1,1], "2016":[1,1], "2018":[1,1]}
+   
+ DTools = DatacardTools(scales,scalesHiggs,vtag_pt_dependence,lumi_unc,1.0,"","",doCorrelation)
  print '##########      PURITY      :', purity 
 
  cat='_'.join(['JJ',sig,purity,'13TeV_'+dataset])
@@ -416,7 +439,7 @@ def makeNonResCard():
       
 # DTools.AddSignal(card,dataset,purity,sig,'results_2016',0)
  print "Adding Signal"
- DTools.AddSignal(card,dataset,purity,sig,'results_%s'%options.year,0)
+ DTools.AddSignal(card,dataset,purity,sig,'results_%s'%options.year,1)
  print "Signal Added 1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
  hname = 'histo'
  if options.sample!='pythia': hname+=('_'+options.sample)
@@ -426,11 +449,11 @@ def makeNonResCard():
   hname = 'histo'
  fin.Close() 
  print "adding shapes bkg"
- card.addHistoShapeFromFile("nonRes",["MJ1","MJ2","MJJ"],options.pdfIn,hname,['OPTXY:CMS_VV_JJ_nonRes_OPTXY_'+category_pdf,'OPTZ:CMS_VV_JJ_nonRes_OPTZ_'+category_pdf,'OPT3:CMS_VV_JJ_nonRes_OPT3_'+category_pdf],False,0) 
+ card.addHistoShapeFromFile("nonRes",["MJ1","MJ2","MJJ"],options.pdfIn,hname,['PTZ:CMS_VV_JJ_nonRes_PTZ_'+category_pdf,'PTXY:CMS_VV_JJ_nonRes_PTXY_'+category_pdf,'OPTXY:CMS_VV_JJ_nonRes_OPTXY_'+category_pdf,'OPTZ:CMS_VV_JJ_nonRes_OPTZ_'+category_pdf,'OPT3:CMS_VV_JJ_nonRes_OPT3_'+category_pdf],False,0) 
  print "adding yield"
  card.addFixedYieldFromFile("nonRes",1,options.input,"nonRes",1)
  print "adding data"
- DTools.AddData(card,options.input,"nonRes",lumi[dataset] )
+ DTools.AddData(card,options.input,"nonRes",lumi[dataset])
  print "adding sig sys for purity", purity
  DTools.AddSigSystematics(card,sig,dataset,purity,0)
 
@@ -438,23 +461,18 @@ def makeNonResCard():
  print "norm"
  card.addSystematic("CMS_VV_JJ_nonRes_norm","lnN",{'nonRes':1.5}) 
  print "OPTZ"
- card.addSystematic("CMS_VV_JJ_nonRes_OPTZ_"+category_pdf,"param",[0.,2.]) #test for VH_LPHP 
-# card.addSystematic("CMS_VV_JJ_nonRes_OPTZ_"+category_pdf,"param",[0.0,1.]) 
- #card.addSystematic("CMS_VV_JJ_nonRes_OPTZ_"+category_pdf,"param",[0.0,0.5])
+ card.addSystematic("CMS_VV_JJ_nonRes_OPTZ_"+category_pdf,"param",[0.,1.]) #1,2
  print "OPTXY"
- card.addSystematic("CMS_VV_JJ_nonRes_OPTXY_"+category_pdf,"param",[0.0,2.]) #test for VH_HPHP
-# card.addSystematic("CMS_VV_JJ_nonRes_OPTXY_"+category_pdf,"param",[0.0,1.]) #orig
-# card.addSystematic("CMS_VV_JJ_nonRes_OPTXY_"+category_pdf,"param",[0.0,0.5])
+ card.addSystematic("CMS_VV_JJ_nonRes_OPTXY_"+category_pdf,"param",[0.,1.]) #0,2
  print "OPT3"
-# card.addSystematic("CMS_VV_JJ_nonRes_OPT3_"+category_pdf,"param",[1.0,0.333]) #orig
-# card.addSystematic("CMS_VV_JJ_nonRes_OPT3_"+category_pdf,"param",[1.0,1.]) #good
- card.addSystematic("CMS_VV_JJ_nonRes_OPT3_"+category_pdf,"param",[1.0,1.]) #test for VH_HPHP  
- #card.addSystematic("CMS_VV_JJ_nonRes_OPT3_"+category_pdf,"param",[10.,20.])
-# print "PT"
-# card.addSystematic("CMS_VV_JJ_nonRes_PT_"+category_pdf,"param",[0.0,0.333]) #orig
-# print "PTZ"
-# card.addSystematic("CMS_VV_JJ_nonRes_PTZ_"+category_pdf,"param",[0.0,2.]) 
- 
+ card.addSystematic("CMS_VV_JJ_nonRes_OPT3_"+category_pdf,"param",[1.,1.]) #test for VH_HPHP  
+ #print "PT"
+ #card.addSystematic("CMS_VV_JJ_nonRes_PT_"+category_pdf,"param",[0.0,0.333]) #orig
+ print "PTZ"
+ card.addSystematic("CMS_VV_JJ_nonRes_PTZ_"+category_pdf,"param",[.0,1.]) #2,2
+ print "PTXY"
+ card.addSystematic("CMS_VV_JJ_nonRes_PTXY_"+category_pdf,"param",[0.,1.]) #0,2
+  
  print " and now make card"     
  card.makeCard()
 
@@ -477,13 +495,19 @@ if __name__=="__main__":
                               
      finMC = ROOT.TFile(options.input,"READ");
      hinMC = finMC.Get("nonRes");
+     purity = ''
      if options.input.find("HPHP")!=-1: purity = "HPHP"
      elif options.input.find("HPLP")!=-1: purity = "HPLP"
      elif options.input.find("LPHP")!=-1: purity = "LPHP"
-     else: purity = "LPLP" 
-     if 'VH' in purity: purity = 'VH_'+purity
-     else: purity = 'VV_'+purity
-     if options.input.find('VBF')!=-1: purity = 'VBF_'+purity    
+     elif options.input.find("LPLP")!=-1: purity = "LPLP"
+     if not 'control_region' in options.input:
+      if 'VH' in options.input: purity = 'VH_'+purity
+      else: purity = 'VV_'+purity
+      if options.input.find('VBF')!=-1: purity = 'VBF_'+purity  
+     if purity == '' and 'control_region' in options.input: purity = 'VH_NPHP_control_region'
+     else:
+      print "SPECIFIED PURITY IS NOT ALLOWED!",options.input,purity
+      sys.exit()  
      print "Using purity: " ,purity    
      if options.merge:
       merge_all()

@@ -2,114 +2,94 @@ void PlotPulls()
 {
 
   int nfiles = 1;
-  int nlabels = 30;
- 
-  std::string files[1] = {"fitDiagnostics.root"};
-  TGraphErrors* np_gr_s = new TGraphErrors();
-  TGraphErrors* np_gr_b = new TGraphErrors();
- 
-  std::string labels[30] = {""};
+  const int nlabels = 25;  
+  std::string labels[nlabels] = {""};
 
+  TFile* tf = new TFile("fitDiagnostics.root","READ");
+  tf->ls();
+  
   int np = 0;
-  Double_t x_np_s[30] = {0};
-  Double_t x_np_b[30] = {0};
-  Double_t y_np[30] = {0};
-  Double_t x_errs_s[30] = {0};
-  Double_t x_errs_b[30] = {0};
-  Double_t y_errs[30] = {0};
+  Double_t x_np_s[nlabels] = {0};
+  Double_t x_np_b[nlabels] = {0};
+  Double_t y_np[nlabels] = {0};
+  Double_t x_errs_s[nlabels] = {0};
+  Double_t x_errs_b[nlabels] = {0};
+  Double_t y_errs[nlabels] = {0};
 
-  for(int f=0; f<nfiles;++f){
+  TGraphErrors* np_gr_s = new TGraphErrors(nlabels+1);
+  np_gr_s->SetName("s_plus_b");
+  TGraphErrors* np_gr_b = new TGraphErrors(nlabels+1);
+  np_gr_b->SetName("b_only");
+  
+  RooArgSet* prefit = (RooArgSet*)tf->Get("nuisances_prefit") ;
+  RooFitResult* postfit_s = (RooFitResult*)tf->Get("fit_s");
+  RooFitResult* postfit_b = (RooFitResult*)tf->Get("fit_b");
  
-    std::cout << files[f] << std::endl;
-    TFile* tf = new TFile(files[f].c_str(),"READ");
-    tf->ls();
+  RooArgList fpf_s = postfit_s->floatParsFinal();
+  RooArgList fpf_b = postfit_b->floatParsFinal();
 
-    RooArgSet* prefit = (RooArgSet*)tf->Get("nuisances_prefit") ;
-    RooFitResult* postfit_s = (RooFitResult*)tf->Get("fit_s");
-    RooFitResult* postfit_b = (RooFitResult*)tf->Get("fit_b");
- 
-    RooArgList fpf_s = postfit_s->floatParsFinal();
-    RooArgList fpf_b = postfit_b->floatParsFinal();
+  for(int k=0; k<fpf_s.getSize(); ++k){
 
-    for(int k=0; k<fpf_s.getSize(); ++k){
-
-      RooRealVar* param_s = (RooRealVar*)fpf_s.at(k);
-      std::string name = param_s->GetName();
-      RooRealVar* nuis_p = (RooRealVar*)prefit->find(name.c_str());
-     
-      if( std::string(param_s->GetName()) == "r" ){
+    RooRealVar* param_s = (RooRealVar*)fpf_s.at(k);
+    std::string name = param_s->GetName();
+    RooRealVar* nuis_p = (RooRealVar*)prefit->find(name.c_str());
    
-	std::cout << name << " " << param_s->getVal() << " " << param_s->getError() << " " << (param_s->getVal()-10.0)/param_s->getError() << std::endl;
-	double pull_s = 0;//(param_s->getVal()-0.0)/param_s->getError();
-	double pull_b = 0;
-	double err_s = param_s->getError()/param_s->getError();
-	double err_b = 0;
-	labels[np] = "r";
-	np_gr_s->SetPoint(np,pull_s,np+0.5);
-	np_gr_s->SetPointError(np,err_s,0.);
-	np_gr_b->SetPoint(np,pull_b,np+0.5);
-	np_gr_b->SetPointError(np,err_b,0.);
-	np+=1;  
-     
-      }
-      else{
-	//RooRealVar* param_s = (RooRealVar*)fpf_s.at(k);
-	RooRealVar*param_b = (RooRealVar*)fpf_b.at(k);   
-	if(name.find("Wjet") != -1 && (name.find("2016") != -1 || name.find("2017") != -1) ) continue;
-
-	std::cout << name << std::endl;
-	std::cout << "   * post-fit val: " << param_s->getVal()<< " (S+B) " << param_b->getVal() << " (B) " << std::endl;
-	std::cout << "   * post-fit err: " << param_s->getError() << " (S+B) " << param_b->getError() << "(B)" << std::endl;
-	std::cout << "   * pre-fit val: " << nuis_p->getVal() << " pre-fit err:" << nuis_p->getError() << std::endl;
-	std::cout << "   * pull: " << (param_s->getVal()-nuis_p->getVal())/nuis_p->getError() << " (S+B) " << (param_b->getVal()-nuis_p->getVal())/nuis_p->getError() << " (B) " << std::endl;
-	std::cout << "   * pull 2: "<< (param_s->getVal()-nuis_p->getVal())/param_s->getError() << " (S+B) " << (param_b->getVal()-nuis_p->getVal())/param_b->getError() << " (B) "  << std::endl; 
-
-	double pull_s = (param_s->getVal()-nuis_p->getVal())/nuis_p->getError();
-	double pull_b = (param_b->getVal()-nuis_p->getVal())/nuis_p->getError();
-	double err_s = param_s->getError()/nuis_p->getError();
-	double err_b = param_b->getError()/nuis_p->getError();
+    if( std::string(param_s->GetName()) == "r" ){
   
-	/*y_np[np] = np+0.5;
-   y_errs[np] = 0.;
-  
-   x_np_s[np] = pull_s;
-   x_np_b[np] = pull_b;
-  
-   x_errs_s[np] = err_s;
-   x_errs_b[np] = err_b;
-  
-   labels[np] = name;
-   np+=1;*/
+      std::cout << name << " " << param_s->getVal() << " " << param_s->getError() << " " << (param_s->getVal()-10.0)/param_s->getError() << std::endl;
+      double pull_s = 0;//(param_s->getVal()-0.0)/param_s->getError();
+      double pull_b = 0;
+      double err_s = param_s->getError()/param_s->getError();
+      double err_b = 0;
+      labels[np] = "r";
+      np_gr_s->SetPoint(np,pull_s,np+0.5);
+      np_gr_s->SetPointError(np,err_s,0.);
+      np_gr_b->SetPoint(np,pull_b,np+0.5);
+      np_gr_b->SetPointError(np,err_b,0.);
+      np+=1;  
    
-	np_gr_s->SetPoint(np,pull_s,np+0.5);
-	np_gr_s->SetPointError(np,err_s,0.);
-	np_gr_b->SetPoint(np,pull_b,np+0.5);
-	np_gr_b->SetPointError(np,err_b,0.);
-	labels[np] = name;
-	np+=1;
-      }
- 
     }
-  
-    /*TGraphErrors* np_gr_s = new TGraphErrors(30,x_np_s,y_np,x_errs_s,y_errs);
- TGraphErrors* np_gr_b = new TGraphErrors(30,x_np_b,y_np,x_errs_b,y_errs);
-  
- graphs[0] = np_gr_s;
- graphs[1] = np_gr_b;*/
+    else{
+    
+      //RooRealVar* param_s = (RooRealVar*)fpf_s.at(k);
+      RooRealVar*param_b = (RooRealVar*)fpf_b.at(k);   
+      if(name.find("Wjet") != -1 && (name.find("2016") != -1 || name.find("2017") != -1) ) continue;
 
-  
+      std::cout << name << std::endl;
+      std::cout << "   * post-fit val: " << param_s->getVal()<< " (S+B) " << param_b->getVal() << " (B) " << std::endl;
+      std::cout << "   * post-fit err: " << param_s->getError() << " (S+B) " << param_b->getError() << "(B)" << std::endl;
+      std::cout << "   * pre-fit val: " << nuis_p->getVal() << " pre-fit err:" << nuis_p->getError() << std::endl;
+      std::cout << "   * pull: " << (param_s->getVal()-nuis_p->getVal())/nuis_p->getError() << " (S+B) " << (param_b->getVal()-nuis_p->getVal())/nuis_p->getError() << " (B) " << std::endl;
+      std::cout << "   * pull 2: "<< (param_s->getVal()-nuis_p->getVal())/param_s->getError() << " (S+B) " << (param_b->getVal()-nuis_p->getVal())/param_b->getError() << " (B) "  << std::endl; 
+
+      double pull_s = (param_s->getVal()-nuis_p->getVal())/nuis_p->getError();
+      double pull_b = (param_b->getVal()-nuis_p->getVal())/nuis_p->getError();
+      double err_s = param_s->getError()/nuis_p->getError();
+      double err_b = param_b->getError()/nuis_p->getError();
+   
+      np_gr_s->SetPoint(np,pull_s,np+0.5);
+      np_gr_s->SetPointError(np,err_s,0.);
+      np_gr_b->SetPoint(np,pull_b,np+0.5);
+      np_gr_b->SetPointError(np,err_b,0.);
+      labels[np] = name;
+      np+=1;
+      
+    }
+ 
   }
 
+  std::cout << "DONE" << std::endl;
   TText t;
   t.SetTextAngle(60);
   t.SetTextSize(0.02);
   t.SetTextFont(42);
   t.SetTextAlign(33);
   const Int_t nx = 12;
-  const Int_t ny=30;
+  const Int_t ny=nlabels;
   TCanvas *c1 = new TCanvas("c1","demo bin labels",10,10,800,800);
-  c1->SetLeftMargin(0.4);
+  c1->SetLeftMargin(0.5);
   c1->SetBottomMargin(0.15);
+  c1->SetRightMargin(0.02);
   TH2F *h = new TH2F("h","test",8,-4,4,ny,0,ny);
 
   h->SetStats(0);
@@ -131,11 +111,11 @@ void PlotPulls()
     t.DrawText(x,y,labels[i].c_str());
   }
 
-  TLine* l_zero = new TLine(0, 0, 0, 30);
-  TLine* l_m1 = new TLine(-1, 0, -1, 30);
-  TLine* l_p1 = new TLine(1,0,1,30);
-  TLine* l_m2 = new TLine(-2, 0, -2, 30);
-  TLine* l_p2 = new TLine(2, 0, 2, 30);
+  TLine* l_zero = new TLine(0, 0, 0, nlabels);
+  TLine* l_m1 = new TLine(-1, 0, -1, nlabels);
+  TLine* l_p1 = new TLine(1,0,1,nlabels);
+  TLine* l_m2 = new TLine(-2, 0, -2, nlabels);
+  TLine* l_p2 = new TLine(2, 0, 2, nlabels);
   l_zero->SetLineStyle(3);
   l_zero->SetLineWidth(2);
   l_m1->SetLineStyle(3);
@@ -175,6 +155,8 @@ void PlotPulls()
   //np_gr_b->Draw("Psame");
   c1->SaveAs("pulls.C");
   c1->SaveAs("pulls.png");
+  
+  tf->Close();
 
 }
 
