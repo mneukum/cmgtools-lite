@@ -44,18 +44,29 @@ class AllFunctions():
    for c in self.categories:
       if 'VBF' in c: VBF = True
       else: nominal = True
-  
+
+   VBF = True
+   nominal = False   
+ 
    #if 'VBF' in c: cut='*'.join([self.cuts['common_VBF'],self.cuts[c.replace('VBF_','')],addcuts])
    #else: cut='*'.join([self.cuts['common_VV'],self.cuts[c],addcuts])
    cuts = []
    if VBF== True: cuts.append('*'.join([self.cuts['common_VBF'],addcuts]))
    if nominal == True: cuts.append('*'.join([self.cuts['common_VV'],addcuts]))
-    
+   
+   print c, VBF, nominal
+ 
+   print cuts
+
    for cut in cuts: 
     #rootFile=filename+"_MJ"+leg+"_"+c+".root"
     rootFile=filename+"_MJ"+leg+"_NP.root" 
     cmd='vvMakeSignalMJShapes.py -s "{template}" -c "{cut}"  -o "{rootFile}" -V "jj_{leg}_softDrop_mass" -m {minMJ} -M {maxMJ} -f "{fixPars}" --minMX {minMX} --maxMX {maxMX} {samples} '.format(template=template,cut=cut,rootFile=rootFile,leg=leg,minMJ=self.minMJ,maxMJ=self.maxMJ,minMX=self.minMX,maxMX=self.maxMX,fixPars=fixPars["NP"]["fixPars"],samples=self.samples)
+    print "========== vvMakeSignalMJShapes.py ==========="
+    print cmd
+#    sys.exit()
     os.system(cmd)
+    sys.exit()
     
     #jsonFile=filename+"_MJ"+leg+"_"+c+".json"
     jsonFile=filename+"_MJ"+leg+"_NP.json"

@@ -2,6 +2,11 @@ from functions import *
 from optparse import OptionParser
 #from cuts import cuts, HPSF16, HPSF17, LPSF16, LPSF17, dijetbins, HCALbinsMVVSignal, minMJ,maxMJ,binsMJ, minMVV, maxMVV, binsMVV, minMX, maxMX, catVtag, catHtag
 import cuts
+import sys
+
+# for now:
+# python makeInputs.py -p 2016 --run "sigmj" --signal "VBS_ZZ_EFT"
+# -> see line 147 (or sth like that)
 
 ## import cuts of the analysis from separate file
 
@@ -55,6 +60,7 @@ if useTriggerWeights:
 #all categories
 categories=['VH_HPHP','VH_HPLP','VH_LPHP','VV_HPHP','VV_HPLP','VBF_VV_HPHP','VBF_VV_HPLP']
 categories=['VH_NPHP_control_region']
+#categories=['VBF_VV_LPLP'] # to be added by me !!!
        
 #list of signal samples --> nb, radion and vbf samples to be added
 BulkGravWWTemplate="BulkGravToWW_"
@@ -64,6 +70,7 @@ ZprimeWWTemplate= "ZprimeToWW_"
 ZprimeZHTemplate="ZprimeToZhToZhadhbb_"
 WprimeWZTemplate= "WprimeToWZToWhadZhad_"
 WprimeWHTemplate="WprimeToWhToWhadhbb_" #"WprimeToWhToWhadhbb_"
+VBSZZEFTTemplate="VBS_ZZ_EFT_"
 
 # use arbitrary cross section 0.001 so limits converge better
 BRZZ=1.*0.001*0.6991*0.6991
@@ -71,6 +78,7 @@ BRWW=1.*0.001 #ZprimeWW and GBulkWW are inclusive
 BRZH=1.*0.001*0.6991*0.584
 BRWZ=1.*0.001*0.6991*0.676
 BRWH=1.*0.001*0.676*0.584
+BREFTZZ= 1.*0.001*0.6991*0.6991
 
 #data samples
 dataTemplate="JetHT"
@@ -125,6 +133,10 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
         signal_inuse="WprimeWH"
         signaltemplate_inuse=WprimeWHTemplate
         xsec_inuse=BRWH
+    elif options.signal.find("VBS_ZZ_EFT")!=-1:
+        signal_inuse="VBS_ZZ_EFT"
+        signaltemplate_inuse=VBSZZEFTTemplate
+        xsec_inuse=BREFTZZ
     else:
         print "signal "+str(options.signal)+" not found!"
         sys.exit()
@@ -146,7 +158,10 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
                 f.makeSignalShapesMJ("JJ_Vjet_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,'random', fixParsSig[signal_inuse],"jj_random_mergedVTruth==1")
                 f.makeSignalShapesMJ("JJ_Hjet_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,'random',fixParsSig[signal_inuse],"jj_random_mergedHTruth==1")
             else:
+		print ("now makeSignaleShapesMJ")
+		print ("JJ_"+str(signal_inuse)+"_"+str(period),str(signaltemplate_inuse),'random',fixParsSig[signal_inuse.replace('VBF_','')])
                 f.makeSignalShapesMJ("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,'random',fixParsSig[signal_inuse.replace('VBF_','')]) 
+		sys.exit()
         else:
             if signal_inuse.find("H")!=-1: 
                 f.makeSignalShapesMJ("JJ_Vjet_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,'l1',fixParsSig[signal_inuse],"jj_l1_mergedVTruth==1")
@@ -172,6 +187,10 @@ if options.run.find("all")!=-1 or options.run.find("sig")!=-1:
         f.makeSignalYields("JJ_"+str(signal_inuse)+"_"+str(period),signaltemplate_inuse,xsec_inuse,{'VH_HPHP':ctx.HPSF_htag*ctx.HPSF_vtag,'VH_HPLP':ctx.HPSF_htag*ctx.LPSF_vtag,'VH_LPHP':ctx.HPSF_vtag*ctx.LPSF_htag,'VH_LPLP':ctx.LPSF_htag*ctx.LPSF_vtag,'VV_HPHP':ctx.HPSF_vtag*ctx.HPSF_vtag,'VV_HPLP':ctx.HPSF_vtag*ctx.LPSF_vtag,'VH_all':ctx.HPSF_vtag*ctx.HPSF_htag+ctx.HPSF_vtag*ctx.LPSF_htag,'VH_NPHP_control_region':ctx.HPSF_vtag*ctx.LPSF_vtag},"pol2")
         f.makeNormalizations("sigonly_M2000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_2000",0,ctx.cuts['nonres'],"sig")
         f.makeNormalizations("sigonly_M4000","JJ_"+str(period)+"_"+str(signal_inuse),signaltemplate_inuse+"narrow_4000",0,ctx.cuts['nonres'],"sig")
+
+print("STOP IT !")
+sys.exit()
+
 
 if options.run.find("all")!=-1 or options.run.find("detector")!=-1:
     print "make Detector response"

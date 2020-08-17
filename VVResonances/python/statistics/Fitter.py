@@ -397,6 +397,7 @@ class Fitter(object):
 	
         peak = ROOT.RooDoubleCB(name,'modelS',self.w.var(poi),self.w.var('mean'),self.w.var('sigma'),self.w.var('alpha'),self.w.var('n'),self.w.var("alpha2"),self.w.var("n2"))
         getattr(self.w,'import')(peak,ROOT.RooFit.Rename(name))
+        self.w.Print("v")
 
 
     def jetResonanceHiggs(self,name = 'model',poi='x'):
@@ -1012,7 +1013,10 @@ class Fitter(object):
             #for b in range(0,a.numBins()+1):
                 #print a.binLow(b)
         dataHist=ROOT.RooDataHist(name,name,cList,histogram)
-        getattr(self.w,'import')(dataHist,ROOT.RooFit.Rename(name))
+        dataHist.Print("v")
+        self.w.Print("v")
+        getattr(self.w,'import')(dataHist)
+#        getattr(self.w,'import')(dataHist,ROOT.RooFit.Rename(name))
 
 
 
