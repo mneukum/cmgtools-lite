@@ -236,13 +236,25 @@ histos_nonRes = {}
 scales={}
 scales_nonRes={}
 
-purity = "LPLP"
-if options.output.find("HPHP")!=-1:purity = "HPHP"
-if options.output.find("HPLP")!=-1:purity = "HPLP"
-if options.output.find("LPHP")!=-1:purity = "LPHP"
-if options.output.find("VV")!=-1: purity = 'VV_'+purity
-else: purity = 'VH_'+purity
-
+#purity = "LPLP"
+#if options.output.find("HPHP")!=-1:purity = "HPHP"
+#if options.output.find("HPLP")!=-1:purity = "HPLP"
+#if options.output.find("LPHP")!=-1:purity = "LPHP"
+#if options.output.find("VV")!=-1: purity = 'VV_'+purity
+#else: purity = 'VH_'+purity
+purity = ''
+if options.output.find("HPHP")!=-1: purity = "HPHP"
+elif options.output.find("HPLP")!=-1: purity = "HPLP"
+elif options.output.find("LPHP")!=-1: purity = "LPHP"
+elif options.output.find("LPLP")!=-1: purity = "LPLP"
+if not 'control_region' in options.output:
+ if 'VH' in options.output: purity = 'VH_'+purity
+ else: purity = 'VV_'+purity
+ if options.output.find('VBF')!=-1: purity = 'VBF_'+purity  
+if purity == '' and 'control_region' in options.output: purity = 'VH_NPHP_control_region'
+else:
+ print "SPECIFIED PURITY IS NOT ALLOWED!",options.output,purity
+ sys.exit()  
 
 fitter=Fitter(['x'])
 fitter.jetResonanceVjets('model','x')

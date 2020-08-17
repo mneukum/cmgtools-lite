@@ -1818,3 +1818,120 @@ def makePseudoDataVjets(input,kernel,mc,output,lumi,workspace,year,purity):
  finmc.Close()
  findata.Close()
  fout.Close()    
+
+
+
+
+
+
+def makePseudoDataVjetsTT(input,input_tt,kernel,mc,output,lumi,workspace,year,purity):
+ 
+ pwd = os.getcwd()
+ pwd = "/"
+ ROOT.gRandom.SetSeed(0)
+ 
+ finmc = ROOT.TFile.Open(pwd+'/'+input,'READ')
+ hmcin = finmc.Get('nonRes')
+
+ findata = ROOT.TFile.Open(pwd+'/'+kernel,'READ')
+ #findata.ls()
+ hdata = ROOT.TH3F()
+ 
+ if   mc == 'pythia': hdata = findata.Get('histo')
+ elif mc == 'herwig': hdata = findata.Get('histo_altshapeUp')
+ elif mc == 'madgraph': hdata = findata.Get('histo_altshape2')
+ elif mc == 'powheg': hdata = findata.Get('histo_NLO')
+ 
+ fout = ROOT.TFile.Open(output,'RECREATE')
+ #hmcin.Scale(10.)
+ hmcin.Write('nonRes')
+ xbins = array("f",getListOfBinsLowEdge(hmcin,"x"))
+ zbins = array("f",getListOfBinsLowEdge(hmcin,"z"))
+ hout = ROOT.TH3F('data','data',len(xbins)-1,xbins,len(xbins)-1,xbins,len(zbins)-1,zbins)
+ 
+ hout.FillRandom(hdata,int(hmcin.Integral()*lumi))
+ 
+ ws_file = ROOT.TFile.Open(workspace,'READ')
+ ws = ws_file.Get('w')
+ ws_file.Close()
+ ws.Print()
+
+ modelWjets = ws.pdf('shapeBkg_Wjets_JJ_%s_13TeV_%i'%(purity,year))
+ modelZjets = ws.pdf('shapeBkg_Zjets_JJ_%s_13TeV_%i'%(purity,year))
+ category = ws.obj("CMS_channel==CMS_channel::JJ_"+purity+"_13TeV_%i"%year)
+
+ MJ1= ws.var("MJ1");
+ MJ2= ws.var("MJ2");
+ MJJ= ws.var("MJJ");
+ args = ROOT.RooArgSet(MJ1,MJ2,MJJ)
+ ### Wjets
+ print "n_exp_binJJ_"+purity+"_13TeV_%i_proc_Wjets"%year
+ o_norm_wjets = ws.obj("n_exp_binJJ_"+purity+"_13TeV_%i_proc_Wjets"%year)
+ hout_wjets = ROOT.TH3F('wjets','wjets',len(xbins)-1,xbins,len(xbins)-1,xbins,len(zbins)-1,zbins)
+ 
+ nEventsW = o_norm_wjets.getVal()
+ print "Expected W+jets events: ",nEventsW
+ wjets = modelWjets.generate(args,int(nEventsW))
+ if wjets!=None:
+  #print signal.sumEntries()
+  for i in range(0,int(wjets.sumEntries())):
+   a = wjets.get(i)
+   it = a.createIterator()
+   var = it.Next()
+   x=[]
+   while var:
+       x.append(var.getVal())
+       var = it.Next()
+   #print x
+   hout_wjets.Fill(x[0],x[1],x[2])
+      
+ hout.Add(hout_wjets)
+ ### Zjets
+ print "n_exp_binJJ_"+purity+"_13TeV_%i_proc_Zjets"%year
+ o_norm_zjets = ws.obj("n_exp_binJJ_"+purity+"_13TeV_%i_proc_Zjets"%year)
+ hout_zjets = ROOT.TH3F('zjets','zjets',len(xbins)-1,xbins,len(xbins)-1,xbins,len(zbins)-1,zbins)
+ 
+ nEventsZ = o_norm_zjets.getVal()
+ print "Expected Z+jets events: ",nEventsZ
+ zjets = modelZjets.generate(args,int(nEventsZ))
+ if zjets!=None:
+  #print signal.sumEntries()
+  for i in range(0,int(zjets.sumEntries())):
+   a = zjets.get(i)
+   it = a.createIterator()
+   var = it.Next()
+   x=[]
+   while var:
+       x.append(var.getVal())
+       var = it.Next()
+   #print x
+   hout_zjets.Fill(x[0],x[1],x[2])
+      
+ hout.Add(hout_zjets)
+ 
+ ftt = ROOT.TFile.Open(input_tt,'READ')
+ hin_tt = ftt.Get('TTJets')
+ hout_tt = ROOT.TH3F('data_tt','data_tt',len(xbins)-1,xbins,len(xbins)-1,xbins,len(zbins)-1,zbins) 
+ hout_tt.FillRandom(hin_tt,int(hin_tt.Integral()*lumi))
+ hout.Add(hout_tt)
+ 
+ fout.cd()
+ hout.Write('data')
+ 
+ print "input    ", input
+ print "kernel   ", kernel
+ print "mc       ", mc
+ print "output   ", output
+ print "lumi     ", lumi
+ print "workspace", workspace
+ print "year     ", year
+ print "purity   ", purity
+ print "Expected W+jets events: ",nEventsW
+ print "Expected Z+jets events: ",nEventsZ
+ print "Expected TTJets events:",int(hin_tt.Integral()*lumi)
+ print "Expected QCD events: ",int(hmcin.Integral()*lumi)
+ print "Writing histograms nonRes and data to file ", output
+
+ finmc.Close()
+ findata.Close()
+ fout.Close()    

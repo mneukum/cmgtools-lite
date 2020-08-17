@@ -159,9 +159,9 @@ for i in range(len(zbinMin)):
  pullsy[i].SetMarkerSize(0)
   
 hx[0].SetMinimum(0)
-hx[0].SetMaximum(0.15)
+hx[0].SetMaximum(0.06)
 hy[0].SetMinimum(0)
-hy[0].SetMaximum(0.15)
+hy[0].SetMaximum(0.06)
 
 for i in range(len(zbinMin)):
  hx[i].Rebin(2)
@@ -331,7 +331,7 @@ for i in range(1,len(xbinMin)):
 cz = get_canvas("cz")
 cz.SetLogy()
 cz.cd()
-hz[0].SetMinimum(1E-06)
+hz[0].SetMinimum(1E-08)
 hz[0].SetMaximum(10.0)
 for i in range(len(xbinMin)):
  hz[i].Draw("HISTsame")

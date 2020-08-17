@@ -138,6 +138,7 @@ class cuts():
             self.lumi = data["lumi"+self.yeartag]
             self.lumi_unc = data["unc_lumi"+self.yeartag]
             
+        
             self.W_LPmassscale = data["W_HPmassscale"+self.yeartag]
             self.W_HPmassscale = data["W_LPmassscale"+self.yeartag]
                           
@@ -165,9 +166,8 @@ class cuts():
             self.catHtag['LP2'] = '(('+ self.varl2Htag +'<'+ self.WPHPl2Htag +')&&('+ self.varl2Htag +'>'+ self.WPLPl2Htag +'))'
             self.catHtag['NP1'] =  '('+ self.varl1Htag +'<'+ self.WPLPl1Htag +')' 
             self.catHtag['NP2'] =  '('+ self.varl2Htag +'<'+ self.WPLPl2Htag +')' 
-
             
-            selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
+            selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","resTT_W","nonresTT","resTnonresT","resWnonresT","resTresW","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
             for sel in selections:
                 self.cuts[sel] = data["selection_cuts"][sel]
                 self.cuts[sel] = self.cuts[sel].replace("minMJ",str(self.minMJ))
@@ -235,6 +235,11 @@ class cuts():
                 self.cuts['VH_all'] =  '('+  '||'.join([self.cuts['VH_HPHP'],self.cuts['VH_LPHP'],self.cuts['VH_HPLP']]) + ')'
 
                 self.cuts['VV_HPLP'] = '(' +'('+'!'+self.cuts['VH_all']+') &&' + '(' + '('+  '&&'.join([self.catVtag['HP1'],self.catVtag['LP2']]) + ')' + '||' + '(' + '&&'.join([self.catVtag['HP2'],self.catVtag['LP1']]) + ')' + ')' + ')'
+
+                #control region (invert w-tag)
+                catsAll['VH_NPHP'] = '('+'&&'.join([self.catVtag['NP1'],self.catHtag['HP2']])+')'
+                catsAll['HV_HPNP'] = '('+'&&'.join([self.catHtag['HP1'],self.catVtag['NP2']])+')'
+                self.cuts['VH_NPHP_control_region'] = '('+'||'.join([catsAll['VH_NPHP'],catsAll['HV_HPNP'],catsAll['HH_HPHP']])+')'
             else:
                 print "Use b-tagging sorting"
                 self.cuts['VH_HPHP'] = '('+  '&&'.join([self.catHtag['HP1'],self.catVtag['HP2']]) + ')'
@@ -249,24 +254,30 @@ class cuts():
 
 if __name__ == "__main__":
     c = cuts("init_VV_VH.json",2016,"dijetbins_random")
-    print c.HPSF_vtag
-    print c.LPSF_vtag
-    print c.minMJ
-    print c.catVtag['LP1']
+    #print c.HPSF_vtag
+    #print c.LPSF_vtag
+    #print c.minMJ
+    #print c.catVtag['LP1']
     
-    print c.catHtag['LP1']
-    print c.maxMX
-    print c.HCALbinsMVV 
-    print c.HCALbinsMVVSignal 
+    #print c.catHtag['LP1']
+    #print c.maxMX
+    #print c.HCALbinsMVV 
+    #print c.HCALbinsMVVSignal 
     
-    print c.cuts["VV_HPHP"]
+    #print c.cuts["VV_HPHP"]
     
-    selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
+    #selections = ["common","common_VV","common_VBF","NP","res","nonres","resTT","acceptance","acceptanceMJ","acceptanceMVV","acceptanceGEN","looseacceptanceMJ"]
     
-    for sel in selections:
-        print c. cuts[sel]
+    #for sel in selections:
+        #print c. cuts[sel]
     
     
-    print c.fixParsSig["ZprimeWW"]['NP']
+    #print c.fixParsSig["ZprimeWW"]['NP']
 
-    print c.minMX
+    #print c.minMX
+    print c.binsMVV
+    print c.HCALbinsMVV
+    
+    for k in c.catVtag.keys():
+        print k,  c.catVtag[k]
+        print k, c.catHtag[k]
